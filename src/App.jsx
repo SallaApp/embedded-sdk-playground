@@ -1,9 +1,10 @@
-import { useState, useEffect, useCallback } from "react";
-import { useTheme } from "./hooks/useTheme.js";
+import { useState, useEffect, useCallback, useRef } from "react";
+import { useTheme } from "./contexts/ThemeContext.jsx";
 import { useEmbeddedSDK } from "./hooks/useEmbeddedSDK.js";
 import { useBootstrap } from "./hooks/useBootstrap.js";
 import { useMessageLog } from "./hooks/useMessageLog.js";
 import { ToastProvider, useToast } from "./contexts/ToastContext.jsx";
+import { ThemeProvider } from "./contexts/ThemeContext.jsx";
 import Header from "./components/Header.jsx";
 import StatusBar from "./components/StatusBar.jsx";
 import Tabs from "./components/Tabs.jsx";
@@ -31,6 +32,8 @@ function AppContent() {
   const [iframeMode, setIframeMode] = useState("standalone");
   const [activeTab, setActiveTab] = useState("test-console");
   const [eventPayload, setEventPayload] = useState(null);
+  const bootstrapInitiatedRef = useRef(false);
+  const isInIframeRef = useRef(false);
 
   // Handle layout update
   const handleLayoutUpdate = useCallback(
@@ -40,7 +43,7 @@ function AppContent() {
         setTheme(layout.theme);
       }
     },
-    [setLayoutData, setTheme],
+    [setLayoutData, setTheme]
   );
 
   // Handle verified data update
@@ -53,7 +56,7 @@ function AppContent() {
     embedded,
     handleLayoutUpdate,
     handleVerifiedDataUpdate,
-    showToast,
+    showToast
   );
 
   // Handle incoming postMessage
@@ -95,7 +98,7 @@ function AppContent() {
           const value = event.data.payload && event.data.payload.value;
           showToast(
             `Action clicked! URL: ${url || "N/A"}, Value: ${value || "N/A"}`,
-            "info",
+            "info"
           );
           logMessage("incoming", event.data);
           break;
@@ -114,6 +117,8 @@ function AppContent() {
   useEffect(() => {
     const isInIframe = window.parent !== window;
     const hasOpener = window.opener !== null;
+
+    isInIframeRef.current = isInIframe;
 
     if (!isInIframe && !hasOpener) {
       setIframeMode("standalone");
@@ -138,9 +143,11 @@ function AppContent() {
         setParentOrigin("—");
       }
     }
+  }, []);
 
-    // Auto-bootstrap if in iframe
-    if (isInIframe) {
+  useEffect(() => {
+    if (isInIframeRef.current && bootstrap && !bootstrapInitiatedRef.current) {
+      bootstrapInitiatedRef.current = true;
       setTimeout(() => {
         bootstrap();
       }, 500);
@@ -160,7 +167,7 @@ function AppContent() {
       if (!target || target === window) {
         showToast(
           "No parent window detected. Open this page in an iframe.",
-          "error",
+          "error"
         );
         logMessage("outgoing", payload, "No parent window");
         return;
@@ -174,7 +181,7 @@ function AppContent() {
         logMessage("outgoing", payload, error.message);
       }
     },
-    [showToast, logMessage],
+    [showToast, logMessage]
   );
 
   // Handle copy log
@@ -245,9 +252,11 @@ function AppContent() {
 
 function App() {
   return (
-    <ToastProvider>
-      <AppContent />
-    </ToastProvider>
+    <ThemeProvider>
+      <ToastProvider>
+        <AppContent />
+      </ToastProvider>
+    </ThemeProvider>
   );
 }
 

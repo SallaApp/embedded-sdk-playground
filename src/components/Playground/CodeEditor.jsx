@@ -1,6 +1,6 @@
-import { useTheme } from "../../hooks/useTheme.js";
 import Editor from "@monaco-editor/react";
 import logger from "../../utils/logger.js";
+import { useTheme } from "../../contexts/ThemeContext.jsx";
 
 const onMount = async (editor, monaco) => {
   let sdkTypesLoaded = false;
@@ -20,7 +20,7 @@ const onMount = async (editor, monaco) => {
         `;
       monaco.languages.typescript.typescriptDefaults.addExtraLib(
         sdkTypes,
-        "file:///node_modules/@types/salla-embedded-sdk/index.d.ts",
+        "file:///node_modules/@types/salla-embedded-sdk/index.d.ts"
       );
       sdkTypesLoaded = true;
     }

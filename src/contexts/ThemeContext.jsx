@@ -1,6 +1,14 @@
-import { useState, useEffect, useCallback } from "react";
+import {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useCallback,
+} from "react";
 
-export function useTheme() {
+const ThemeContext = createContext(null);
+
+export function ThemeProvider({ children }) {
   const [isDarkMode, setIsDarkMode] = useState(() => {
     // Check URL params for dark mode
     const urlParams = new URLSearchParams(window.location.search);
@@ -39,5 +47,17 @@ export function useTheme() {
     });
   }, []);
 
-  return { isDarkMode, toggleTheme, setTheme };
+  return (
+    <ThemeContext.Provider value={{ isDarkMode, toggleTheme, setTheme }}>
+      {children}
+    </ThemeContext.Provider>
+  );
+}
+
+export function useTheme() {
+  const context = useContext(ThemeContext);
+  if (!context) {
+    throw new Error("useTheme must be used within ThemeProvider");
+  }
+  return context;
 }

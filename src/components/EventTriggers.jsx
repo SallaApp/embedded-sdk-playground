@@ -76,7 +76,7 @@ export default function EventTriggers({
             const result = await embedded.auth.introspect();
             showToast(
               `Introspect success! Token ID: ${result.data.id}, User ID: ${result.data.user_id}`,
-              "success",
+              "success"
             );
             logMessage("incoming", {
               event: "embedded::auth.introspect.response",
@@ -135,11 +135,10 @@ export default function EventTriggers({
           break;
 
         case "embedded::ui.loading-show":
-          embedded.ui.loading.show();
-          showToast(
-            "Loading event sent. You should call embedded.ui.loading.hide() to re-show the App. This test App will automatically hide loading after 10 seconds",
-            "info",
+          embedded.ui.toast.info(
+            "Loading event sent. You should call embedded.ui.loading.hide() to re-show the App. This test App will automatically hide loading after 10 seconds"
           );
+          embedded.ui.loading.show();
           setTimeout(() => {
             embedded.ui.loading.hide();
           }, 10000);
@@ -185,7 +184,7 @@ export default function EventTriggers({
             });
             showToast(
               `Confirm result: ${result.confirmed ? "✓ Confirmed" : "✗ Cancelled"}`,
-              result.confirmed ? "success" : "info",
+              result.confirmed ? "success" : "info"
             );
             logMessage("incoming", {
               event: "embedded::ui.confirm.response",
