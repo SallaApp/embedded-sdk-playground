@@ -385,4 +385,4 @@ For testing with the dashboard, embed this app via iframe with a token:
 
 ## License
 
-Copyright 2024 Salla
+MIT
