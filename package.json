@@ -1,0 +1,34 @@
+{
+  "name": "embedded-sdk-test-kit",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "sync-types": "node scripts/sync-types.js",
+    "prebuild": "rm -rf dist && npm run sync-types",
+    "dev": "pnpm prebuild && vite",
+    "dev:netlify": "netlify dev",
+    "build": "pnpm prebuild && vite build",
+    "preview": "vite preview",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@vitejs/plugin-react": "^5.1.2",
+    "netlify-cli": "^23.13.0",
+    "prettier": "^3.7.4",
+    "vite": "5.4.17"
+  },
+  "dependencies": {
+    "@monaco-editor/react": "^4.7.0",
+    "@salla.sa/embedded-sdk": "0.1.0-beta.12",
+    "lucide-react": "^0.562.0",
+    "monaco-editor": "^0.55.1",
+    "react": "^19.2.3",
+    "react-dom": "^19.2.3"
+  }
+}
