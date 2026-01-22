@@ -94,12 +94,8 @@ function AppContent() {
           break;
 
         case "embedded::nav.actionClick":
-          const url = event.data.payload && event.data.payload.url;
-          const value = event.data.payload && event.data.payload.value;
-          showToast(
-            `Action clicked! URL: ${url || "N/A"}, Value: ${value || "N/A"}`,
-            "info"
-          );
+          const actionValue = event.data.payload && event.data.payload.value;
+          showToast(`Action clicked! Value: ${actionValue || "N/A"}`, "info");
           logMessage("incoming", event.data);
           break;
 

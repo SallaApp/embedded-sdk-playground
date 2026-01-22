@@ -117,11 +117,6 @@ export default function EventTriggers({
         case "embedded::nav.setAction":
           embedded.nav.setAction({
             title: payload.title,
-            onClick: payload.onClick
-              ? () => {
-                  logger.log("Action button clicked");
-                }
-              : undefined,
             value: payload.value,
             subTitle: payload.subTitle,
             icon: payload.icon,

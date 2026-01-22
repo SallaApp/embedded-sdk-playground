@@ -139,7 +139,6 @@ const EmbeddedEvents = {
     description: "Set primary action button in navigation bar",
     payload: {
       title: "Add Product",
-      onClick: true,
       value: "create",
       subTitle: "Create a new product",
       icon: "sicon-add",
@@ -151,7 +150,6 @@ const EmbeddedEvents = {
     },
     configurable: [
       "title",
-      "onClick",
       "value",
       "subTitle",
       "icon",
@@ -166,9 +164,7 @@ const EmbeddedEvents = {
   "embedded::nav.clearAction": {
     category: "nav",
     description: "Clear primary action button",
-    payload: {
-      title: "",
-    },
+    payload: {},
   },
 
   // ============================================
@@ -363,7 +359,7 @@ const IncomingEvents = {
 
   "embedded::nav.actionClick": {
     description: "Primary action button was clicked by user",
-    expectedFields: ["url", "value"],
+    expectedFields: ["value"],
   },
 
   "embedded::ui.confirm.response": {
