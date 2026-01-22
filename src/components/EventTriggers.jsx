@@ -75,7 +75,7 @@ export default function EventTriggers({
           try {
             const result = await embedded.auth.introspect();
             showToast(
-              `Introspect success! Token ID: ${result.data.id}, User ID: ${result.data.user_id}`,
+              `Introspect success! Merchant ID: ${result.data.merchant_id}, User ID: ${result.data.user_id}`,
               "success"
             );
             logMessage("incoming", {
