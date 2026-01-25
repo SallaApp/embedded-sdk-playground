@@ -250,33 +250,6 @@ const EmbeddedEvents = {
   },
 
   /**
-   * Open modal
-   */
-  "embedded::ui.modal-open": {
-    category: "ui",
-    description: "Open a modal dialog",
-    payload: {
-      action: "open",
-      id: "confirm-dialog",
-      content: { title: "Confirm Action", body: "Are you sure?" },
-    },
-    configurable: ["id", "content"],
-  },
-
-  /**
-   * Close modal
-   */
-  "embedded::ui.modal-close": {
-    category: "ui",
-    description: "Close a modal dialog",
-    payload: {
-      action: "close",
-      id: "confirm-dialog",
-    },
-    configurable: ["id"],
-  },
-
-  /**
    * Confirm dialog (async)
    * Returns a Promise with the user's choice
    */
@@ -316,26 +289,6 @@ const EmbeddedEvents = {
     configurable: ["checkoutId", "amount", "currency", "items"],
   },
 
-  // ============================================
-  // Logging Events
-  // ============================================
-
-  /**
-   * Send log message
-   */
-  "embedded::log": {
-    category: "log",
-    description: "Send log message to host",
-    payload: {
-      level: "info",
-      message: "Test log message from embedded app",
-      context: {
-        component: "TestConsole",
-        action: "test-logging",
-      },
-    },
-    configurable: ["level", "message", "context"],
-  },
 };
 
 /**
@@ -365,11 +318,6 @@ const IncomingEvents = {
   "embedded::ui.confirm.response": {
     description: "Response to confirm dialog request",
     expectedFields: ["requestId", "confirmed"],
-  },
-
-  "embedded::ui.modal.response": {
-    description: "Response to modal request",
-    expectedFields: ["requestId", "result", "error"],
   },
 };
 

@@ -159,14 +159,6 @@ export default function EventTriggers({
           embedded.ui.toast.info(payload.message, payload.duration);
           break;
 
-        case "embedded::ui.modal-open":
-          embedded.ui.modal.open(payload.id, payload.content);
-          break;
-
-        case "embedded::ui.modal-close":
-          embedded.ui.modal.close(payload.id);
-          break;
-
         case "embedded::ui.confirm": {
           showToast("Waiting for confirm dialog response...", "info");
           try {
@@ -193,10 +185,6 @@ export default function EventTriggers({
 
         case "embedded::checkout.create":
           embedded.checkout.create(payload);
-          break;
-
-        case "embedded::log":
-          embedded.log(payload.level, payload.message, payload.context);
           break;
 
         default:
@@ -388,28 +376,13 @@ export default function EventTriggers({
         </div>
       </section>
 
-      {/* Modal & Dialogs */}
+      {/* Dialogs */}
       <section className="event-section">
         <h3 className="section-title">
           <Square size={16} />
-          Modal & Dialogs
+          Dialogs
         </h3>
         <div className="button-grid">
-          <Button
-            event
-            variant="toggle"
-            label="Open Modal"
-            hint="ui.modal (open)"
-            onClick={() => handleEventButtonClick("embedded::ui.modal-open")}
-            disabled
-          />
-          <Button
-            event
-            label="Close Modal"
-            hint="ui.modal (close)"
-            onClick={() => handleEventButtonClick("embedded::ui.modal-close")}
-            disabled
-          />
           <Button
             event
             variant="accent"
@@ -420,11 +393,11 @@ export default function EventTriggers({
         </div>
       </section>
 
-      {/* Checkout & Logging */}
+      {/* Checkout */}
       <section className="event-section">
         <h3 className="section-title">
           <ShoppingBag size={16} />
-          Checkout & Logging
+          Checkout
         </h3>
         <div className="button-grid">
           <Button
@@ -434,12 +407,6 @@ export default function EventTriggers({
             hint="checkout.create"
             onClick={() => handleEventButtonClick("embedded::checkout.create")}
             disabled
-          />
-          <Button
-            event
-            label="Send Log"
-            hint="log"
-            onClick={() => handleEventButtonClick("embedded::log")}
           />
         </div>
       </section>
