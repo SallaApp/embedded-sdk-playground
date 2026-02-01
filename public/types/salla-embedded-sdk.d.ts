@@ -120,7 +120,7 @@ export declare class EmbeddedApp {
   page: PageModule;
   /** Nav module for primary actions */
   nav: NavModule;
-  /** UI module for loading, overlay, toast, modal */
+  /** UI module for loading, overlay, toast, confirm */
   ui: UIModule;
   /** Checkout module for checkout flow */
   checkout: CheckoutModule;
@@ -180,23 +180,6 @@ export declare class EmbeddedApp {
    * ```
    */
   onInit(callback: InitCallback): () => void;
-  /**
-   * Send log message to host for debugging/monitoring.
-   *
-   * @param level - Log level (info, warn, error)
-   * @param message - Log message
-   * @param context - Additional context
-   *
-   * @example
-   * ```typescript
-   * embedded.log('error', 'Failed to load data', { endpoint: '/api/data' });
-   * ```
-   */
-  log(
-    level: LogLevel,
-    message: string,
-    context?: Record<string, unknown>,
-  ): void;
   /**
    * Signal that the app is fully loaded and ready.
    * This removes the host's loading overlay.
@@ -368,55 +351,6 @@ declare interface LoadingSubModule {
    * Hide loading indicator.
    */
   hide(): void;
-}
-
-/**
- * Log level type.
- */
-declare type LogLevel = "info" | "warn" | "error";
-
-/**
- * Modal action types.
- */
-export declare type ModalAction = "open" | "close";
-
-/**
- * Modal action type.
- */
-declare type ModalAction_2 = "open" | "close";
-
-/**
- * Modal control options.
- */
-export declare interface ModalOptions {
-  /** Modal action */
-  action: ModalAction_2;
-  /** Modal identifier */
-  id?: string;
-  /** Modal content/data */
-  content?: unknown;
-}
-
-/**
- * Modal sub-module interface.
- */
-declare interface ModalSubModule {
-  /**
-   * Open a modal.
-   * @param id - Modal identifier
-   * @param content - Modal content/data
-   *
-   * @example
-   * ```typescript
-   * embedded.ui.modal.open('confirm-delete', { itemId: 123 });
-   * ```
-   */
-  open(id?: string, content?: unknown): void;
-  /**
-   * Close a modal.
-   * @param id - Modal identifier
-   */
-  close(id?: string): void;
 }
 
 /**
@@ -703,10 +637,6 @@ export declare interface UIModule {
    * Toast notifications.
    */
   toast: ToastSubModule;
-  /**
-   * Modal control.
-   */
-  modal: ModalSubModule;
   /**
    * Show a confirmation dialog and wait for user response.
    *
