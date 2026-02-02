@@ -288,7 +288,6 @@ const EmbeddedEvents = {
     },
     configurable: ["checkoutId", "amount", "currency", "items"],
   },
-
 };
 
 /**

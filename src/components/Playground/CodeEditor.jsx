@@ -20,7 +20,7 @@ const onMount = async (editor, monaco) => {
         `;
       monaco.languages.typescript.typescriptDefaults.addExtraLib(
         sdkTypes,
-        "file:///node_modules/@types/salla-embedded-sdk/index.d.ts"
+        "file:///node_modules/@types/salla-embedded-sdk/index.d.ts",
       );
       sdkTypesLoaded = true;
     }

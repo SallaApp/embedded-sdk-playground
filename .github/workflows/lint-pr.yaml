@@ -1,0 +1,53 @@
+name: "Lint PR"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+on:
+  pull_request:
+    types:
+      - opened
+      - edited
+      - synchronize
+
+jobs:
+  title:
+    name: Validate PR title
+    runs-on:
+      group: default
+
+    steps:
+      - uses: amannn/action-semantic-pull-request@v5
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          types: |
+            feat
+            fix
+            hotfix
+            docs
+            chore
+            refactor
+            release
+          scopes: |
+            sdk
+            [A-Z]+-\d+
+          ignoreLabels: |
+            bot
+            ignore-semantic-pull-request
+          requireScope: true
+
+  branch:
+    name: Validate branch name
+    runs-on:
+      group: default
+
+    steps:
+      - uses: lekterable/branchlint-action@2.0.0
+        with:
+          allowed: |
+            /(bugfix|hotfix|feature|test)\/[a-zA-Z]+-\d{1,10}(?:-[^\/]+)?$/i
+            /^dependabot\/\w+.+/i
+            /release\/v?(\d+\.)?(\d+\.)?(\*|\d+)/i
+          errorMessage: "The allowed prefixes for branch name are (bugfix|hotfix|feature)"

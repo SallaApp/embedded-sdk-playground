@@ -27,7 +27,7 @@ export function ThemeProvider({ children }) {
   const applyTheme = (dark) => {
     document.documentElement.setAttribute(
       "data-theme",
-      dark ? "dark" : "light"
+      dark ? "dark" : "light",
     );
     localStorage.setItem("theme", dark ? "dark" : "light");
   };

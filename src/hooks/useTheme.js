@@ -19,7 +19,7 @@ export function useTheme() {
   const applyTheme = (dark) => {
     document.documentElement.setAttribute(
       "data-theme",
-      dark ? "dark" : "light"
+      dark ? "dark" : "light",
     );
     localStorage.setItem("theme", dark ? "dark" : "light");
   };
