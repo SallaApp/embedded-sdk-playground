@@ -13,6 +13,8 @@
     "preview": "vite preview",
     "test": "vitest run --coverage",
     "test:watch": "vitest watch",
+    "lint:strict": "pnpm run format:check",
+    "typecheck": "echo \"No TypeScript typecheck configured\"",
     "format": "prettier --write .",
     "format:check": "prettier --check ."
   },
