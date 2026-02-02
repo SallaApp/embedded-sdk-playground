@@ -1,4 +1,4 @@
-# Embedded SDK Test Kit v0.1.0-beta.12
+# Embedded SDK Playground v0.2.2
 
 A developer testing tool for the Salla Embedded SDK.
 
