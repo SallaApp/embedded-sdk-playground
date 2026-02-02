@@ -43,7 +43,7 @@ function AppContent() {
         setTheme(layout.theme);
       }
     },
-    [setLayoutData, setTheme]
+    [setLayoutData, setTheme],
   );
 
   // Handle verified data update
@@ -56,7 +56,7 @@ function AppContent() {
     embedded,
     handleLayoutUpdate,
     handleVerifiedDataUpdate,
-    showToast
+    showToast,
   );
 
   // Handle incoming postMessage
@@ -163,7 +163,7 @@ function AppContent() {
       if (!target || target === window) {
         showToast(
           "No parent window detected. Open this page in an iframe.",
-          "error"
+          "error",
         );
         logMessage("outgoing", payload, "No parent window");
         return;
@@ -177,7 +177,7 @@ function AppContent() {
         logMessage("outgoing", payload, error.message);
       }
     },
-    [showToast, logMessage]
+    [showToast, logMessage],
   );
 
   // Handle copy log
