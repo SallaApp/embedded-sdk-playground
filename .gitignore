@@ -2,3 +2,5 @@ node_modules
 dist
 .cursor/rules/codacy.mdc
 .netlify
+/coverage
+.env
