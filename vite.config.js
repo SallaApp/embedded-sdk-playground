@@ -19,6 +19,7 @@ export default defineConfig({
       exclude: [
         "node_modules/",
         "dist/",
+        ".eslintrc.cjs",
         "**/*.config.js",
         "**/test/**",
         "**/__tests__/**",
