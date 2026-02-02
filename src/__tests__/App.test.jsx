@@ -53,4 +53,14 @@ describe("App", () => {
     await userEvent.click(screen.getByRole("button", { name: "Playground" }));
     expect(screen.getByText("Code Editor")).toBeInTheDocument();
   });
+
+  it("shows toast when Send is clicked with no parent window", async () => {
+    render(<App />);
+    await userEvent.click(screen.getByRole("button", { name: /send/i }));
+    expect(
+      screen.getByText(
+        /No parent window detected\. Open this page in an iframe/,
+      ),
+    ).toBeInTheDocument();
+  });
 });

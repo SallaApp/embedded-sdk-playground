@@ -24,9 +24,9 @@
 
 <!-- Describe how you tested these changes -->
 
-- [ ] Tested locally with `pnpm dev`
+- [ ] Unit tests pass: `pnpm run test` (or `pnpm test`)
+- [ ] New or changed code has corresponding unit test updates (if applicable)
 - [ ] Verified SDK events work correctly
-- [ ] Checked message log functionality
 - [ ] Other (please describe)
 
 ## Screenshots (if applicable)
