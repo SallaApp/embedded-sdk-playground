@@ -12,7 +12,7 @@ describe("eventDefinitions", () => {
     });
 
     it("each event has category, description, and payload", () => {
-      Object.entries(EmbeddedEvents).forEach(([key, def]) => {
+      Object.entries(EmbeddedEvents).forEach(([_key, def]) => {
         expect(def).toHaveProperty("category");
         expect(def).toHaveProperty("description");
         expect(def).toHaveProperty("payload");

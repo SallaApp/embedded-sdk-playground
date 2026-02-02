@@ -11,7 +11,7 @@ const VERIFY_API_URLS = {
   prod: "https://api.salla.dev/exchange-authority/v1/verify",
 };
 
-exports.handler = async (event, context) => {
+exports.handler = async (event, _context) => {
   // Only allow POST requests
   if (event.httpMethod !== "POST") {
     return {
@@ -23,7 +23,7 @@ exports.handler = async (event, context) => {
   try {
     // Parse request body
     const body = JSON.parse(event.body || "{}");
-    const { token, iss, subject, env, appId } = body;
+    const { token, iss, subject, appId } = body;
 
     // Validate required fields
     if (!token) {
@@ -42,7 +42,6 @@ exports.handler = async (event, context) => {
     }
 
     // Determine environment (default to 'dev')
-    // const environment = env || "dev";
     const environment = process.env.ENV;
 
     // Get API URL based on environment
