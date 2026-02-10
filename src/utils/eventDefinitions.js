@@ -273,20 +273,14 @@ const EmbeddedEvents = {
   // ============================================
 
   /**
-   * Create checkout
+   * Get available addons for the app
+   * Note: Use the Addons tab to test checkout flow with real addons
    */
-  "embedded::checkout.create": {
+  "embedded::checkout.getAddons": {
     category: "checkout",
-    description: "Initiate checkout process",
-    payload: {
-      checkoutId: "CHK_" + Date.now(),
-      amount: 299.99,
-      currency: "SAR",
-      items: [
-        { id: "PROD_001", name: "Test Product", quantity: 1, price: 299.99 },
-      ],
-    },
-    configurable: ["checkoutId", "amount", "currency", "items"],
+    description: "Fetch available addons for the app (cached on host)",
+    payload: {},
+    async: true,
   },
 };
 
@@ -317,6 +311,23 @@ const IncomingEvents = {
   "embedded::ui.confirm.response": {
     description: "Response to confirm dialog request",
     expectedFields: ["requestId", "confirmed"],
+  },
+
+  "embedded::checkout.response": {
+    description: "Checkout result from host",
+    expectedFields: [
+      "success",
+      "status",
+      "order_id",
+      "error",
+      "context",
+      "message",
+    ],
+  },
+
+  "embedded::checkout.getAddons.response": {
+    description: "Available addons list from host",
+    expectedFields: ["success", "addons", "error"],
   },
 };
 
