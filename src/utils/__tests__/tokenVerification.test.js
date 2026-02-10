@@ -3,7 +3,7 @@ import { verifyToken } from "../tokenVerification.js";
 import { VERIFY_FUNCTION_URL } from "../constants.js";
 
 vi.mock("../constants.js", () => ({
-  VERIFY_FUNCTION_URL: "/.netlify/functions/verify-token",
+  VERIFY_FUNCTION_URL: "/server/functions/verify-token",
   getAppId: vi.fn(() => "test-app-id"),
 }));
 
