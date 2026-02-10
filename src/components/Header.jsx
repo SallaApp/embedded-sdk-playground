@@ -1,4 +1,4 @@
-import { useTheme } from "../hooks/useTheme.js";
+import { useTheme } from "../contexts/ThemeContext.jsx";
 import { Sun, Moon, Code2 } from "lucide-react";
 import Button from "./forms/Button.jsx";
 
