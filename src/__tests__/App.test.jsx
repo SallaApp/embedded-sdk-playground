@@ -8,27 +8,30 @@ const mockEmbedded = {
   ready: vi.fn(),
   auth: { getToken: vi.fn().mockReturnValue(null) },
   page: { resize: vi.fn() },
+  nav: { onActionClick: vi.fn().mockReturnValue(() => {}) },
   destroy: vi.fn(),
+  onThemeChange: vi.fn().mockReturnValue(() => {}),
+  onInit: vi.fn().mockReturnValue(() => {}),
   ui: { toast: { error: vi.fn() }, loading: { show: vi.fn(), hide: vi.fn() } },
+  checkout: { getAddons: vi.fn(), onResult: vi.fn().mockReturnValue(() => {}) },
 };
 
-vi.mock("../hooks/useEmbeddedSDK.js", () => ({
-  useEmbeddedSDK: () => ({
+vi.mock("../hooks/useAppBootstrap.js", () => ({
+  useAppBootstrap: () => ({
     embedded: mockEmbedded,
-    layoutData: null,
-    setLayoutData: vi.fn(),
-    init: vi.fn().mockResolvedValue({ layout: {} }),
-    isInitialized: false,
+    isReady: false,
+    isInitializing: false,
+    layout: null,
+    token: null,
+    verifiedData: null,
+    verifyStatus: "idle",
+    error: null,
+    bootstrap: vi.fn().mockResolvedValue(undefined),
   }),
 }));
 
-vi.mock("../hooks/useBootstrap.js", () => ({
-  useBootstrap: () => ({
-    token: null,
-    verifiedData: null,
-    verifyStatus: "—",
-    bootstrap: vi.fn().mockResolvedValue(undefined),
-  }),
+vi.mock("../hooks/useExposeEmbeddedGlobally.js", () => ({
+  useExposeEmbeddedGlobally: () => {},
 }));
 
 describe("App", () => {

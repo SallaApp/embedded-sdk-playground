@@ -1,7 +1,9 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useTheme } from "./contexts/ThemeContext.jsx";
-import { useEmbeddedSDK } from "./hooks/useEmbeddedSDK.js";
-import { useBootstrap } from "./hooks/useBootstrap.js";
+import { useAppBootstrap } from "./hooks/useAppBootstrap.js";
+import { useExposeEmbeddedGlobally } from "./hooks/useExposeEmbeddedGlobally.js";
+import { useCheckoutResultSubscription } from "./hooks/useCheckoutResultSubscription.js";
+import { useIframeAutoBootstrap } from "./hooks/useIframeAutoBootstrap.js";
 import { useMessageLog } from "./hooks/useMessageLog.js";
 import { ToastProvider, useToast } from "./contexts/ToastContext.jsx";
 import { ThemeProvider } from "./contexts/ThemeContext.jsx";
@@ -13,11 +15,64 @@ import MessageLog from "./components/MessageLog.jsx";
 import DataDisplay from "./components/DataDisplay.jsx";
 import PayloadEditor from "./components/PayloadEditor.jsx";
 import PlaygroundTab from "./components/Playground/PlaygroundTab.jsx";
+import AddonsTab from "./components/Addons/AddonsTab.jsx";
 
 function AppContent() {
   const { setTheme } = useTheme();
-  const { embedded, layoutData, setLayoutData, init } = useEmbeddedSDK();
   const { showToast } = useToast();
+
+  // ============================================
+  // EXAMPLE: Embedded App Bootstrap
+  // This demonstrates the recommended initialization flow
+  // ============================================
+
+  // Memoize callbacks to prevent subscription churn
+  const handleSdkThemeChange = useCallback(
+    (newTheme) => {
+      setTheme(newTheme);
+      showToast(`Theme changed by host: ${newTheme}`, "info");
+    },
+    [setTheme, showToast],
+  );
+
+  const handleSdkActionClick = useCallback(
+    (value) => {
+      showToast(`Action clicked! Value: ${value}`, "info");
+    },
+    [showToast],
+  );
+
+  const {
+    embedded,
+    isReady,
+    layout,
+    token,
+    verifiedData,
+    verifyStatus,
+    bootstrap,
+  } = useAppBootstrap({
+    debug: true,
+    autoInit: false, // We trigger manually after iframe detection
+    onThemeChange: handleSdkThemeChange,
+    onActionClick: handleSdkActionClick,
+  });
+
+  // Expose embedded globally for Playground feature
+  useExposeEmbeddedGlobally();
+
+  // Subscribe to checkout results (works after 3DS redirects)
+  useCheckoutResultSubscription();
+
+  // Detect iframe mode and auto-bootstrap when embedded
+  const { iframeMode, parentOrigin, setParentOrigin } =
+    useIframeAutoBootstrap(bootstrap);
+
+  // ============================================
+  // TEST CONSOLE TOOLING
+  // The following is specific to this test app,
+  // not part of a typical embedded app
+  // ============================================
+
   const {
     messageLog,
     filterUnknown,
@@ -27,135 +82,68 @@ function AppContent() {
     copyLog,
   } = useMessageLog();
 
-  const [isConnected, setIsConnected] = useState(false);
-  const [parentOrigin, setParentOrigin] = useState(null);
-  const [iframeMode, setIframeMode] = useState("standalone");
   const [activeTab, setActiveTab] = useState("test-console");
   const [eventPayload, setEventPayload] = useState(null);
-  const bootstrapInitiatedRef = useRef(false);
-  const isInIframeRef = useRef(false);
+  const hasShownConnectedToast = useRef(false);
 
-  // Handle layout update
-  const handleLayoutUpdate = useCallback(
-    (layout) => {
-      setLayoutData(layout);
+  const handleTabChange = useCallback(
+    (tabId) => {
+      setActiveTab(tabId);
+      // Auto-resize iframe after view changes
+      setTimeout(() => {
+        embedded.page.resize(document.body.clientHeight);
+      }, 100);
+    },
+    [embedded],
+  );
+
+  // Connection status derived from SDK state
+  const isConnected = isReady;
+
+  // Show toast on initial connection (once only)
+  useEffect(() => {
+    if (isReady && layout && !hasShownConnectedToast.current) {
+      hasShownConnectedToast.current = true;
+      showToast("Connected! Received layout context.", "success");
+      // Sync initial theme from host (subsequent changes handled by onThemeChange callback)
       if (layout.theme) {
         setTheme(layout.theme);
       }
-    },
-    [setLayoutData, setTheme],
-  );
+    }
+  }, [isReady, layout, showToast, setTheme]);
 
-  // Handle verified data update
-  const handleVerifiedDataUpdate = useCallback((data) => {
-    // Data is already set in useBootstrap hook
-  }, []);
+  // ============================================
+  // TOOLING: Message Logger
+  // Logs ALL postMessage traffic for debugging
+  // Real apps should NOT include this
+  // ============================================
 
-  // Bootstrap flow
-  const { token, verifiedData, verifyStatus, bootstrap } = useBootstrap(
-    embedded,
-    handleLayoutUpdate,
-    handleVerifiedDataUpdate,
-    showToast,
-  );
-
-  // Handle incoming postMessage
   useEffect(() => {
     const handleIncomingMessage = (event) => {
-      // Log all incoming messages
+      // Only log embedded:: events
+      if (!event.data?.event?.startsWith?.("embedded::")) return;
+
+      // Log for debugging
       logMessage("incoming", event.data, null, event.origin);
 
-      // Update connection status on first message
-      if (!isConnected && event.data && event.data.event) {
-        setIsConnected(true);
-      }
-
-      // Handle specific events
-      if (!event.data || !event.data.event) return;
-
-      switch (event.data.event) {
-        case "embedded::context.provide":
-          // Set parent origin only from the official SDK handshake message
-          if (event.origin && event.origin !== window.location.origin) {
-            setParentOrigin(event.origin);
-          }
-          if (event.data.payload && event.data.payload.layout) {
-            handleLayoutUpdate(event.data.payload.layout);
-            showToast("Connected! Received layout context.", "success");
-          }
-          break;
-
-        case "embedded::theme.change":
-          const theme = event.data.payload && event.data.payload.theme;
-          if (theme) {
-            setTheme(theme);
-            showToast("Theme changed by host: " + theme, "info");
-          }
-          break;
-
-        case "embedded::nav.actionClick":
-          const actionValue = event.data.payload && event.data.payload.value;
-          showToast(`Action clicked! Value: ${actionValue || "N/A"}`, "info");
-          logMessage("incoming", event.data);
-          break;
-
-        default:
-          // Already logged above
-          break;
+      // Update parent origin from first message
+      if (event.origin && event.origin !== window.location.origin) {
+        setParentOrigin(event.origin);
       }
     };
 
     window.addEventListener("message", handleIncomingMessage);
     return () => window.removeEventListener("message", handleIncomingMessage);
-  }, [isConnected, logMessage, showToast, handleLayoutUpdate, setTheme]);
+  }, [logMessage, setParentOrigin]);
 
-  // Detect iframe mode
-  useEffect(() => {
-    const isInIframe = window.parent !== window;
-    const hasOpener = window.opener !== null;
+  // ============================================
+  // TOOLING: Event Trigger Handlers
+  // ============================================
 
-    isInIframeRef.current = isInIframe;
-
-    if (!isInIframe && !hasOpener) {
-      setIframeMode("standalone");
-    } else {
-      setIframeMode(isInIframe ? "iframe" : "popup");
-    }
-
-    // Try to detect parent origin if same-origin
-    if (isInIframe) {
-      try {
-        // If same-origin, we can access parent.location
-        const parentOrigin = window.parent.location.origin;
-        if (parentOrigin && parentOrigin !== window.location.origin) {
-          setParentOrigin(parentOrigin);
-        } else {
-          // Fallback: will be updated when first message arrives
-          setParentOrigin(window.location.origin + " (self)");
-        }
-      } catch (e) {
-        // Cross-origin: can't access parent.location
-        // Will be updated from postMessage event.origin
-        setParentOrigin("—");
-      }
-    }
-  }, []);
-
-  useEffect(() => {
-    if (isInIframeRef.current && bootstrap && !bootstrapInitiatedRef.current) {
-      bootstrapInitiatedRef.current = true;
-      setTimeout(() => {
-        bootstrap();
-      }, 500);
-    }
-  }, [bootstrap]);
-
-  // Handle event button click - update payload editor
   const handleEventClick = useCallback((eventName, payload) => {
     setEventPayload({ eventName, payload });
   }, []);
 
-  // Handle custom payload send
   const handleSendCustom = useCallback(
     (payload) => {
       const target = window.parent !== window ? window.parent : window.opener;
@@ -180,19 +168,22 @@ function AppContent() {
     [showToast, logMessage],
   );
 
-  // Handle copy log
   const handleCopyLog = useCallback(async () => {
     const success = await copyLog();
-    if (success) {
-      showToast("Log copied to clipboard", "success");
-    } else {
-      showToast("Failed to copy log", "error");
-    }
+    showToast(
+      success ? "Log copied to clipboard" : "Failed to copy log",
+      success ? "success" : "error",
+    );
   }, [copyLog, showToast]);
+
+  // ============================================
+  // Render
+  // ============================================
 
   const tabs = [
     { id: "test-console", label: "Test Console" },
     { id: "playground", label: "Playground" },
+    { id: "addons", label: "Addons" },
   ];
 
   return (
@@ -203,9 +194,9 @@ function AppContent() {
         parentOrigin={parentOrigin}
         iframeMode={iframeMode}
       />
-      <Tabs activeTab={activeTab} onTabChange={setActiveTab} tabs={tabs} />
+      <Tabs activeTab={activeTab} onTabChange={handleTabChange} tabs={tabs} />
       <main className="main-content">
-        {activeTab === "test-console" ? (
+        {activeTab === "test-console" && (
           <>
             <EventTriggers
               embedded={embedded}
@@ -223,10 +214,18 @@ function AppContent() {
                 onCopy={handleCopyLog}
               />
               <DataDisplay
-                layoutData={layoutData}
+                layoutData={layout}
                 token={token}
                 verifiedData={verifiedData}
-                verifyStatus={verifyStatus}
+                verifyStatus={
+                  verifyStatus === "verified"
+                    ? "✓ Verified"
+                    : verifyStatus === "failed"
+                      ? "✗ Failed"
+                      : verifyStatus === "verifying"
+                        ? "Verifying..."
+                        : "—"
+                }
               />
               <PayloadEditor
                 onSend={handleSendCustom}
@@ -234,8 +233,16 @@ function AppContent() {
               />
             </div>
           </>
-        ) : (
+        )}
+        {activeTab === "playground" && (
           <PlaygroundTab
+            embedded={embedded}
+            logMessage={logMessage}
+            showToast={showToast}
+          />
+        )}
+        {activeTab === "addons" && (
+          <AddonsTab
             embedded={embedded}
             logMessage={logMessage}
             showToast={showToast}
