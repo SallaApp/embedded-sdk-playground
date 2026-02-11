@@ -3,7 +3,7 @@ import { Sun, Moon, Code2 } from "lucide-react";
 import Button from "./forms/Button.jsx";
 
 export default function Header() {
-  const { isDarkMode, toggleTheme } = useTheme();
+  const { toggleTheme } = useTheme();
 
   return (
     <header className="header">
@@ -12,7 +12,7 @@ export default function Header() {
           <Code2 size={28} />
         </div>
         <h1 className="header-title">Embedded SDK Playground</h1>
-        <span className="header-version">v0.2.2</span>
+        <span className="header-version">v0.2.3</span>
       </div>
       <div className="header-right">
         <Button

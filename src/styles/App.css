@@ -968,7 +968,7 @@ pre,
   gap: var(--space-md);
   padding: var(--space-lg);
   background: var(--bg-secondary);
-  border: 1px solid var(--border-color);
+  border: 2px solid var(--border-color);
   border-radius: var(--radius-lg);
   transition: all var(--transition-normal);
 }
@@ -976,6 +976,11 @@ pre,
 .addon-card:hover {
   box-shadow: var(--shadow-md);
   border-color: var(--border-color-strong);
+}
+
+.addon-card--selected {
+  border-color: var(--accent-primary, #0ea5e9);
+  background: rgba(14, 165, 233, 0.03);
 }
 
 .addon-card--pending {
@@ -991,16 +996,39 @@ pre,
   border-color: var(--accent-danger);
 }
 
+.addon-card-top {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-sm);
+}
+
+.addon-card-select {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  padding-top: 3px;
+}
+
+.addon-card-select input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  accent-color: var(--accent-primary, #0ea5e9);
+}
+
 .addon-card-header {
   display: flex;
   flex-direction: column;
   gap: var(--space-xs);
+  min-width: 0;
 }
 
 .addon-card-name {
   font-size: 1.1rem;
   font-weight: 600;
   color: var(--text-primary);
+  line-height: 1.3;
 }
 
 .addon-card-slug {
@@ -1024,6 +1052,7 @@ pre,
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: var(--space-md);
   padding-top: var(--space-md);
   border-top: 1px solid var(--border-color);
 }
@@ -1032,6 +1061,7 @@ pre,
   display: flex;
   align-items: baseline;
   gap: var(--space-xs);
+  flex-shrink: 0;
 }
 
 .addon-card-amount {
@@ -1045,6 +1075,50 @@ pre,
   font-weight: 500;
   color: var(--text-tertiary);
   text-transform: uppercase;
+}
+
+.addon-card-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.addon-card-quantity-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 4px 8px;
+  background: var(--bg-primary);
+}
+
+.addon-card-quantity-label {
+  font-size: 0.7rem;
+  font-weight: 500;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  user-select: none;
+}
+
+.addon-card-quantity {
+  width: 40px;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  text-align: center;
+  padding: 0;
+  -moz-appearance: textfield;
+}
+
+.addon-card-quantity::-webkit-outer-spin-button,
+.addon-card-quantity::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
 }
 
 .addon-card-result {

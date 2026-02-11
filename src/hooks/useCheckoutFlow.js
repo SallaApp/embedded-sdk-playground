@@ -12,70 +12,89 @@ import logger from "../utils/logger.js";
  */
 export function useCheckoutFlow(embedded, showToast) {
   const [checkoutStates, setCheckoutStates] = useState({});
-  const pendingSlugRef = useRef(null);
+  const pendingSlugsRef = useRef([]);
 
   useEffect(() => {
     if (!embedded?.checkout?.onResult) return;
 
     const unsubscribe = embedded.checkout.onResult((result) => {
-      const slug = pendingSlugRef.current;
+      const slugs = pendingSlugsRef.current;
       logger.log("Checkout result received:", result);
 
       // Update per-addon state for UI (toasts handled globally in App.jsx)
+      const updateSlugs = (status, resultValue) => {
+        if (!slugs.length) return;
+        setCheckoutStates((prev) => {
+          const next = { ...prev };
+          for (const slug of slugs) {
+            next[slug] = { status, result: resultValue };
+          }
+          return next;
+        });
+      };
+
       if (result.success) {
         const statusText = result.status === "pending" ? "pending" : "success";
-        if (slug) {
-          setCheckoutStates((prev) => ({
-            ...prev,
-            [slug]: { status: statusText, result },
-          }));
-        }
+        updateSlugs(statusText, result);
       } else if (result.status === "cancelled") {
-        if (slug) {
-          setCheckoutStates((prev) => ({
-            ...prev,
-            [slug]: { status: "idle", result: null },
-          }));
-        }
+        updateSlugs("idle", null);
       } else {
-        if (slug) {
-          setCheckoutStates((prev) => ({
-            ...prev,
-            [slug]: { status: "error", result },
-          }));
-        }
+        updateSlugs("error", result);
       }
 
-      pendingSlugRef.current = null;
+      pendingSlugsRef.current = [];
     });
 
     return unsubscribe;
   }, [embedded]);
 
   const initiateCheckout = useCallback(
-    (addon) => {
+    (addonOrAddons) => {
+      const addons = Array.isArray(addonOrAddons) ? addonOrAddons : [addonOrAddons];
+      const slugs = addons.map((a) => a.slug);
+
       try {
-        pendingSlugRef.current = addon.slug;
-        setCheckoutStates((prev) => ({
-          ...prev,
-          [addon.slug]: { status: "pending", result: null },
-        }));
-        showToast(`Initiating checkout for ${addon.name}...`, "info");
-        embedded.checkout.create(
-          { type: "addon", slug: addon.slug, quantity: 1 },
-          { context: { addonSlug: addon.slug } },
-        );
+        pendingSlugsRef.current = slugs;
+        setCheckoutStates((prev) => {
+          const next = { ...prev };
+          for (const addon of addons) {
+            next[addon.slug] = { status: "pending", result: null };
+          }
+          return next;
+        });
+
+        if (addons.length === 1) {
+          const addon = addons[0];
+          showToast(`Initiating checkout for ${addon.name}...`, "info");
+          embedded.checkout.create(
+            { type: "addon", slug: addon.slug, quantity: addon._quantity || 1 },
+            { context: { addonSlug: addon.slug } },
+          );
+        } else {
+          showToast(`Initiating checkout for ${addons.length} items...`, "info");
+          embedded.checkout.create(
+            addons.map((a) => ({
+              type: "addon",
+              slug: a.slug,
+              quantity: a._quantity || 1,
+            })),
+            { context: { addonSlugs: slugs } },
+          );
+        }
       } catch (err) {
         logger.error("Checkout create error:", err);
         showToast(`Checkout error: ${err.message}`, "error");
-        setCheckoutStates((prev) => ({
-          ...prev,
-          [addon.slug]: {
-            status: "error",
-            result: { error: { message: err.message } },
-          },
-        }));
-        pendingSlugRef.current = null;
+        setCheckoutStates((prev) => {
+          const next = { ...prev };
+          for (const slug of slugs) {
+            next[slug] = {
+              status: "error",
+              result: { error: { message: err.message } },
+            };
+          }
+          return next;
+        });
+        pendingSlugsRef.current = [];
       }
     },
     [embedded, showToast],
