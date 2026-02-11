@@ -50,7 +50,9 @@ export function useCheckoutFlow(embedded, showToast) {
 
   const initiateCheckout = useCallback(
     (addonOrAddons) => {
-      const addons = Array.isArray(addonOrAddons) ? addonOrAddons : [addonOrAddons];
+      const addons = Array.isArray(addonOrAddons)
+        ? addonOrAddons
+        : [addonOrAddons];
       const slugs = addons.map((a) => a.slug);
 
       try {
@@ -71,7 +73,10 @@ export function useCheckoutFlow(embedded, showToast) {
             { context: { addonSlug: addon.slug } },
           );
         } else {
-          showToast(`Initiating checkout for ${addons.length} items...`, "info");
+          showToast(
+            `Initiating checkout for ${addons.length} items...`,
+            "info",
+          );
           embedded.checkout.create(
             addons.map((a) => ({
               type: "addon",

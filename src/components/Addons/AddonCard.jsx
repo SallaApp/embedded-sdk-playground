@@ -20,7 +20,9 @@ export default function AddonCard({
   const quantity = addon._quantity || 1;
 
   return (
-    <div className={`addon-card addon-card--${status}${selected ? " addon-card--selected" : ""}`}>
+    <div
+      className={`addon-card addon-card--${status}${selected ? " addon-card--selected" : ""}`}
+    >
       <div className="addon-card-top">
         <label className="addon-card-select">
           <input
@@ -49,7 +51,10 @@ export default function AddonCard({
               min={1}
               value={quantity}
               onChange={(e) =>
-                onQuantityChange(addon.slug, Math.max(1, parseInt(e.target.value) || 1))
+                onQuantityChange(
+                  addon.slug,
+                  Math.max(1, parseInt(e.target.value) || 1),
+                )
               }
             />
           </div>

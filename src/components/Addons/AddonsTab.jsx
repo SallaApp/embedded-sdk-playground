@@ -123,7 +123,9 @@ export default function AddonsTab({ embedded, logMessage, showToast }) {
   const handleBuy = (addon) => {
     logMessage("outgoing", {
       event: "embedded::checkout.create",
-      items: [{ type: "addon", slug: addon.slug, quantity: addon._quantity || 1 }],
+      items: [
+        { type: "addon", slug: addon.slug, quantity: addon._quantity || 1 },
+      ],
     });
     initiateCheckout(addon);
   };
