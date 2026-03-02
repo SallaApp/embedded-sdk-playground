@@ -26,12 +26,14 @@ const SDK_PACKAGE = "@salla.sa/embedded-sdk";
 const TYPES_DEST = "public/types/salla-embedded-sdk.d.ts";
 
 try {
+  console.log(`[sync-types] Starting type sync for ${SDK_PACKAGE}...`);
   const nodeModulesPath = join(rootDir, "node_modules");
   let packagePath;
 
   // First try pnpm structure (most common)
   const pnpmPath = join(nodeModulesPath, ".pnpm");
   if (existsSync(pnpmPath)) {
+    console.log(`[sync-types] Detected pnpm structure at ${pnpmPath}`);
     const entries = readdirSync(pnpmPath);
     const packageNameEscaped = SDK_PACKAGE.replace(/\//g, "+");
     // Collect all matching packages and find the one with types file
@@ -47,6 +49,7 @@ try {
         );
         if (existsSync(candidatePath)) {
           candidates.push(candidatePath);
+          console.log(`[sync-types] Found pnpm candidate: ${candidatePath}`);
         }
       }
     }
@@ -62,26 +65,50 @@ try {
         const typesSourcePath = resolve(packageDir, typesPath);
         if (existsSync(typesSourcePath)) {
           packagePath = candidatePath;
+          console.log(
+            `[sync-types] Selected candidate with types: ${typesSourcePath}`,
+          );
           break;
+        } else {
+          console.log(
+            `[sync-types] Types file does not exist at: ${typesSourcePath}`,
+          );
         }
+      } else {
+        console.log(
+          `[sync-types] No types field in candidate package.json: ${candidatePath}`,
+        );
       }
     }
     // If no package with types found, use the last one (likely the latest version)
     if (!packagePath && candidates.length > 0) {
       packagePath = candidates[candidates.length - 1];
+      console.log(`[sync-types] Using fallback candidate: ${packagePath}`);
     }
+  } else {
+    console.log(
+      `[sync-types] pnpm structure not found. Will try standard node_modules...`,
+    );
   }
 
   // Fallback to standard node_modules structure
   if (!packagePath) {
     packagePath = join(nodeModulesPath, SDK_PACKAGE, "package.json");
+    console.log(`[sync-types] Trying standard node_modules at: ${packagePath}`);
     if (!existsSync(packagePath)) {
       // Try require.resolve as last resort
       try {
         packagePath = require.resolve(`${SDK_PACKAGE}/package.json`);
+        console.log(
+          `[sync-types] Found package.json via require.resolve: ${packagePath}`,
+        );
       } catch (e) {
-        // Ignore
+        console.log(
+          `[sync-types] Could not resolve package.json via require.resolve`,
+        );
       }
+    } else {
+      console.log(`[sync-types] package.json exists at: ${packagePath}`);
     }
   }
 
@@ -101,6 +128,8 @@ try {
 
   if (!typesPath) {
     throw new Error(`No types field found in ${SDK_PACKAGE} package.json`);
+  } else {
+    console.log(`[sync-types] Found types field: ${typesPath}`);
   }
 
   // Resolve types file path relative to package directory
@@ -122,18 +151,23 @@ try {
         `Types file not found at ${typesSourcePath} and no cached version exists`,
       );
     }
+  } else {
+    console.log(`[sync-types] Types file found at: ${typesSourcePath}`);
   }
 
   // Read the types file
   const typesContent = readFileSync(typesSourcePath, "utf-8");
+  console.log(`[sync-types] Read types file content.`);
 
   // Ensure destination directory exists
   const destDir = join(rootDir, dirname(TYPES_DEST));
   mkdirSync(destDir, { recursive: true });
+  console.log(`[sync-types] Ensured destination directory: ${destDir}`);
 
   // Write to public folder
   const destPath = join(rootDir, TYPES_DEST);
   writeFileSync(destPath, typesContent, "utf-8");
+  console.log(`[sync-types] Wrote types file to: ${destPath}`);
 
   console.log(`✓ Synced types from ${SDK_PACKAGE} to ${TYPES_DEST}`);
 } catch (error) {

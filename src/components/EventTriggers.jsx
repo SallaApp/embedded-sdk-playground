@@ -1,14 +1,5 @@
 import { EmbeddedEvents } from "../utils/eventDefinitions.js";
-import {
-  Clock,
-  Lock,
-  Home,
-  Menu,
-  Grid3x3,
-  Bell,
-  Square,
-  ShoppingBag,
-} from "lucide-react";
+import { Clock, Lock, Home, Menu, Grid3x3, Bell, Square } from "lucide-react";
 import Button from "./forms/Button.jsx";
 import logger from "../utils/logger.js";
 
@@ -182,10 +173,6 @@ export default function EventTriggers({
           }
           break;
         }
-
-        case "embedded::checkout.create":
-          embedded.checkout.create(payload);
-          break;
 
         default:
           showToast("No Embedded SDK handler for event: " + eventName, "error");
@@ -389,24 +376,6 @@ export default function EventTriggers({
             label="⚡ Confirm (Async)"
             hint="ui.confirm → Promise"
             onClick={() => handleEventButtonClick("embedded::ui.confirm")}
-          />
-        </div>
-      </section>
-
-      {/* Checkout */}
-      <section className="event-section">
-        <h3 className="section-title">
-          <ShoppingBag size={16} />
-          Checkout
-        </h3>
-        <div className="button-grid">
-          <Button
-            event
-            variant="accent"
-            label="Create Checkout"
-            hint="checkout.create"
-            onClick={() => handleEventButtonClick("embedded::checkout.create")}
-            disabled
           />
         </div>
       </section>

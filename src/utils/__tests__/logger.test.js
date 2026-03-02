@@ -14,35 +14,35 @@ describe("logger", () => {
     vi.restoreAllMocks();
   });
 
-  it("prefixes log with [sdk-test]", () => {
+  it("prefixes log with [SDK-Playground]", () => {
     logger.log("hello");
-    expect(console.log).toHaveBeenCalledWith("[sdk-test]", "hello");
+    expect(console.log).toHaveBeenCalledWith("[SDK-Playground]", "hello");
   });
 
-  it("prefixes warn with [sdk-test]", () => {
+  it("prefixes warn with [SDK-Playground]", () => {
     logger.warn("warning");
-    expect(console.warn).toHaveBeenCalledWith("[sdk-test]", "warning");
+    expect(console.warn).toHaveBeenCalledWith("[SDK-Playground]", "warning");
   });
 
-  it("prefixes error with [sdk-test]", () => {
+  it("prefixes error with [SDK-Playground]", () => {
     logger.error("error");
-    expect(console.error).toHaveBeenCalledWith("[sdk-test]", "error");
+    expect(console.error).toHaveBeenCalledWith("[SDK-Playground]", "error");
   });
 
-  it("prefixes info with [sdk-test]", () => {
+  it("prefixes info with [SDK-Playground]", () => {
     logger.info("info");
-    expect(console.info).toHaveBeenCalledWith("[sdk-test]", "info");
+    expect(console.info).toHaveBeenCalledWith("[SDK-Playground]", "info");
   });
 
-  it("prefixes debug with [sdk-test]", () => {
+  it("prefixes debug with [SDK-Playground]", () => {
     logger.debug("debug");
-    expect(console.debug).toHaveBeenCalledWith("[sdk-test]", "debug");
+    expect(console.debug).toHaveBeenCalledWith("[SDK-Playground]", "debug");
   });
 
   it("formats objects as JSON string in log", () => {
     logger.log({ foo: 1 });
     expect(console.log).toHaveBeenCalledWith(
-      "[sdk-test]",
+      "[SDK-Playground]",
       expect.stringContaining('"foo": 1'),
     );
   });
@@ -50,7 +50,7 @@ describe("logger", () => {
   it("strips %c and style args from first arg when present", () => {
     logger.log("%cStyled%cMore", "color:red", "color:blue", "message");
     expect(console.log).toHaveBeenCalledWith(
-      "[sdk-test]",
+      "[SDK-Playground]",
       "StyledMore",
       "message",
     );

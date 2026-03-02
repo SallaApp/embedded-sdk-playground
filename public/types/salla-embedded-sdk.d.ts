@@ -1,7 +1,24 @@
 /**
  * Callback for action button clicks.
+ * @param value - The value identifier of the clicked action
  */
-declare type ActionClickCallback = (url?: string, value?: string) => void;
+declare type ActionClickCallback = (value: string) => void;
+
+/**
+ * Addon information returned by getAddons.
+ */
+declare interface AddonInfo {
+  /** Unique slug identifier */
+  slug: string;
+  /** Internal product ID */
+  product_id: number;
+  /** Internal price ID */
+  product_price_id: number;
+  /** Display name */
+  name: string;
+  /** Price amount */
+  price: number;
+}
 
 /**
  * Auth module interface.
@@ -36,42 +53,127 @@ export declare interface AuthModule {
 }
 
 /**
- * Checkout module interface.
+ * Optional configuration for checkout creation.
  */
-export declare interface CheckoutModule {
-  /**
-   * Create/initiate a checkout flow.
-   *
-   * @param payload - Checkout data
-   *
-   * @example
-   * ```typescript
-   * embedded.checkout.create({
-   *   items: [{ productId: 123, quantity: 1 }],
-   *   amount: 99.99,
-   *   currency: 'SAR'
-   * });
-   * ```
-   */
-  create(payload: CheckoutPayload): void;
+export declare interface CheckoutCreateConfig {
+  /** Optional context to persist across 3DS redirects.
+   * Stored on the host side and returned in onResult after redirect. */
+  context?: unknown;
 }
 
 /**
  * @fileoverview Type definitions for the checkout module.
  */
 /**
- * Checkout payload structure.
+ * Checkout item with type information.
  */
-export declare interface CheckoutPayload {
-  /** Cart items or product IDs */
-  items?: unknown[];
-  /** Total amount */
-  amount?: number;
-  /** Currency code */
-  currency?: string;
-  /** Additional checkout data */
-  [key: string]: unknown;
+export declare interface CheckoutItem {
+  /** Item type */
+  type: "addon";
+  /** Item slug identifier */
+  slug: string;
+  /** Quantity (default: 1) */
+  quantity?: number;
 }
+
+/**
+ * Checkout module interface.
+ */
+export declare interface CheckoutModule {
+  /**
+   * Create/initiate a checkout flow.
+   *
+   * Accepts a single item or an array of items for multi-item checkout.
+   *
+   * @param input - Single checkout item or array of items
+   * @param config - Optional configuration
+   *
+   * @example
+   * ```typescript
+   * // Single item
+   * embedded.checkout.create(
+   *   { type: "addon", slug: "premium-analytics", quantity: 1 },
+   *   { context: { route: "/pricing", plan: "premium" } },
+   * );
+   *
+   * // Multiple items
+   * embedded.checkout.create([
+   *   { type: "addon", slug: "premium-analytics", quantity: 2 },
+   *   { type: "addon", slug: "extra-storage" },
+   * ]);
+   * ```
+   */
+  create(
+    input: CheckoutItem | CheckoutItem[],
+    config?: CheckoutCreateConfig,
+  ): void;
+  /**
+   * Subscribe to checkout results.
+   * Context from create() is returned here after 3DS redirect.
+   *
+   * @param callback - Function called when checkout completes
+   * @returns Unsubscribe function
+   *
+   * @example
+   * ```typescript
+   * const unsubscribe = embedded.checkout.onResult((result) => {
+   *   if (result.context?.route) {
+   *     router.push(result.context.route);
+   *   }
+   *   if (result.success) {
+   *     console.log("Order:", result.order_id);
+   *   }
+   * });
+   * ```
+   */
+  onResult(callback: CheckoutResultCallback): () => void;
+  /**
+   * Get available addons for the current app.
+   * Results are cached on the host side (30 min TTL).
+   *
+   * @returns Promise resolving to addon list
+   *
+   * @example
+   * ```typescript
+   * const result = await embedded.checkout.getAddons();
+   * if (result.success) {
+   *   console.log('Available addons:', result.addons);
+   * } else {
+   *   console.error('Error:', result.error);
+   * }
+   * ```
+   */
+  getAddons(): Promise<GetAddonsResult>;
+  /**
+   * Clean up module resources (message listeners, subscriptions).
+   * Called automatically by EmbeddedApp.destroy().
+   */
+  destroy(): void;
+}
+
+/**
+ * Checkout result returned after payment.
+ */
+export declare interface CheckoutResult {
+  /** Whether the checkout was successful */
+  success: boolean;
+  /** Order ID if successful */
+  order_id?: string;
+  /** Payment status */
+  status: "paid" | "pending" | "failed" | "cancelled" | "success";
+  /** Error details if failed */
+  error?: {
+    code: string;
+    message: string;
+  };
+  /** Developer context passed to create(), restored after 3DS redirect */
+  context?: unknown;
+}
+
+/**
+ * Callback for checkout result.
+ */
+export declare type CheckoutResultCallback = (result: CheckoutResult) => void;
 
 /**
  * Confirm dialog options.
@@ -109,11 +211,14 @@ export declare const embedded: EmbeddedApp;
  * Provides the primary interface for third-party apps to communicate with the Salla host.
  */
 export declare class EmbeddedApp {
-  private config;
-  private state;
-  private themeCallbacks;
-  private initCallbacks;
+  private initialized;
+  private initializing;
+  private debugMode;
   private appReady;
+  private layout;
+  private themeSubscription;
+  private initSubscription;
+  private postInitHooks;
   /** Auth module for token management */
   auth: AuthModule;
   /** Page module for navigation and resize */
@@ -126,128 +231,44 @@ export declare class EmbeddedApp {
   checkout: CheckoutModule;
   constructor();
   /**
-   * Get current SDK state (layout info only, no token).
+   * Register a hook to run after successful init handshake.
+   * Used by modules to process context data.
+   */
+  private registerPostInitHook;
+  /**
+   * Set up core event listeners.
+   */
+  private setupListeners;
+  /**
+   * Get current SDK state.
    */
   getState(): Readonly<EmbeddedState>;
   /**
-   * Get current SDK configuration.
-   */
-  getConfig(): Readonly<EmbeddedConfig>;
-  /**
-   * Check if SDK is initialized.
+   * Check if SDK is initialized and ready.
    */
   isReady(): boolean;
   /**
-   * Unified internal logging function that supports all console log types.
-   *
-   * @param type - Log type (log, warn, error, info, debug)
-   * @param args - Arguments to log
-   */
-  private internalLog;
-  /**
-   * Set up listener for theme changes from host.
-   */
-  private setupThemeListener;
-  /**
-   * Set up listeners for async response events from host.
-   */
-  private setupResponseListeners;
-  /**
    * Subscribe to theme changes.
-   *
-   * @param callback - Function called when theme changes
-   * @returns Unsubscribe function
-   *
-   * @example
-   * ```typescript
-   * const unsubscribe = embedded.onThemeChange((theme) => {
-   *   document.body.classList.toggle('dark-mode', theme === 'dark');
-   * });
-   * ```
    */
-  onThemeChange(callback: ThemeChangeCallback): () => void;
+  onThemeChange(callback: (theme: "light" | "dark") => void): () => void;
   /**
-   * Subscribe to init completion. If called after init, fires immediately.
-   *
-   * @param callback - Function called when init completes
-   * @returns Unsubscribe function
-   *
-   * @example
-   * ```typescript
-   * embedded.onInit((state) => {
-   *   console.log('SDK initialized with layout:', state.layout);
-   * });
-   * ```
+   * Subscribe to init completion. Fires immediately if already initialized.
    */
   onInit(callback: InitCallback): () => void;
   /**
-   * Send log message to host for debugging/monitoring.
-   *
-   * @param level - Log level (info, warn, error)
-   * @param message - Log message
-   * @param context - Additional context
-   *
-   * @example
-   * ```typescript
-   * embedded.log('error', 'Failed to load data', { endpoint: '/api/data' });
-   * ```
-   */
-  log(
-    level: LogLevel,
-    message: string,
-    context?: Record<string, unknown>,
-  ): void;
-  /**
    * Signal that the app is fully loaded and ready.
-   * This removes the host's loading overlay.
-   *
-   * @example
-   * ```typescript
-   * // After verifying token and loading initial data
-   * embedded.ready();
-   * ```
    */
   ready(): void;
   /**
    * Initialize the SDK and establish connection with the host.
-   *
-   * @param options - Initialization options (optional)
-   * @returns Promise that resolves with layout info
-   *
-   * @example
-   * ```typescript
-   * const { layout } = await embedded.init({ debug: true });
-   * console.log('Theme:', layout.theme);
-   * console.log('Locale:', layout.locale);
-   * ```
    */
   init(options?: InitOptions): Promise<{
     layout: LayoutInfo;
   }>;
   /**
-   * Wait for initialization to complete.
-   * Useful when multiple calls to init() might happen.
-   */
-  private waitForInit;
-  /**
    * Destroy the SDK instance and clean up resources.
-   * Sends a destroy event to the host to navigate away from the embedded view.
-   *
-   * @example
-   * ```typescript
-   * // On auth failure or when app needs to exit
-   * embedded.destroy();
-   * ```
    */
   destroy(): void;
-}
-
-/**
- * Internal configuration after initialization.
- */
-declare interface EmbeddedConfig {
-  debug: boolean;
-  initialized: boolean;
 }
 
 /**
@@ -267,11 +288,25 @@ export declare interface EmbeddedState {
  */
 export declare interface ExtendedAction {
   title: string;
+  value: string;
   subTitle?: string;
-  url?: string;
-  value?: string;
   icon?: string;
   disabled?: boolean;
+}
+
+/**
+ * Result of getAddons call.
+ */
+declare interface GetAddonsResult {
+  /** Whether the fetch was successful */
+  success: boolean;
+  /** List of available addons (if success) */
+  addons?: AddonInfo[];
+  /** Error details (if failed) */
+  error?: {
+    code: string;
+    message: string;
+  };
 }
 
 /**
@@ -322,8 +357,8 @@ declare interface IntrospectResponse {
  * Response data from the introspect API.
  */
 declare interface IntrospectResponseData {
-  /** Token ID */
-  id: number;
+  /** Merchant ID (Store ID) */
+  merchant_id: number;
   /** User ID */
   user_id: number;
   /** Expiration time in ISO 8601 format */
@@ -371,55 +406,6 @@ declare interface LoadingSubModule {
 }
 
 /**
- * Log level type.
- */
-declare type LogLevel = "info" | "warn" | "error";
-
-/**
- * Modal action types.
- */
-export declare type ModalAction = "open" | "close";
-
-/**
- * Modal action type.
- */
-declare type ModalAction_2 = "open" | "close";
-
-/**
- * Modal control options.
- */
-export declare interface ModalOptions {
-  /** Modal action */
-  action: ModalAction_2;
-  /** Modal identifier */
-  id?: string;
-  /** Modal content/data */
-  content?: unknown;
-}
-
-/**
- * Modal sub-module interface.
- */
-declare interface ModalSubModule {
-  /**
-   * Open a modal.
-   * @param id - Modal identifier
-   * @param content - Modal content/data
-   *
-   * @example
-   * ```typescript
-   * embedded.ui.modal.open('confirm-delete', { itemId: 123 });
-   * ```
-   */
-  open(id?: string, content?: unknown): void;
-  /**
-   * Close a modal.
-   * @param id - Modal identifier
-   */
-  close(id?: string): void;
-}
-
-/**
  * Nav module interface.
  */
 export declare interface NavModule {
@@ -430,22 +416,11 @@ export declare interface NavModule {
    *
    * @example
    * ```typescript
+   * // Simple action button
    * embedded.nav.setAction({
    *   title: 'Create Product',
-   *   onClick: () => {
-   *     // Handle click
-   *   }
-   * });
-   *
-   * // With optional props
-   * embedded.nav.setAction({
-   *   title: 'Save',
-   *   subTitle: 'Save changes',
-   *   icon: 'sicon-save',
-   *   disabled: false,
-   *   onClick: () => {
-   *     handleSave();
-   *   }
+   *   value: 'create-product',
+   *   icon: 'sicon-plus',
    * });
    *
    * // With extended actions dropdown
@@ -453,9 +428,18 @@ export declare interface NavModule {
    *   title: 'Actions',
    *   value: 'main-action',
    *   extendedActions: [
-   *     { title: 'Import', url: '/import' },
-   *     { title: 'Export', value: 'export' }
+   *     { title: 'Import', value: 'import' },
+   *     { title: 'Export', value: 'export' },
    *   ]
+   * });
+   *
+   * // Handle clicks via onActionClick
+   * embedded.nav.onActionClick((value) => {
+   *   if (value === 'create-product') {
+   *     openCreateForm();
+   *   } else if (value === 'import') {
+   *     embedded.page.navigate('/import');
+   *   }
    * });
    * ```
    */
@@ -472,27 +456,27 @@ export declare interface NavModule {
   /**
    * Subscribe to action button click events.
    *
-   * @param callback - Function called when action is clicked
+   * @param callback - Function called when action is clicked, receives the action value
    * @returns Unsubscribe function
    *
    * @example
    * ```typescript
-   * const unsubscribe = embedded.nav.onActionClick((url, value) => {
-   *   if (value === 'export') {
-   *     handleExport();
+   * const unsubscribe = embedded.nav.onActionClick((value) => {
+   *   switch (value) {
+   *     case 'save':
+   *       handleSave();
+   *       break;
+   *     case 'export':
+   *       handleExport();
+   *       break;
+   *     case 'settings':
+   *       embedded.page.navigate('/settings');
+   *       break;
    *   }
    * });
    * ```
    */
   onActionClick(callback: ActionClickCallback): Unsubscribe;
-  /**
-   * @deprecated Use setAction instead
-   */
-  primaryAction(config: PrimaryActionConfig): void;
-  /**
-   * @deprecated Use clearAction instead
-   */
-  clearPrimaryAction(): void;
 }
 
 /**
@@ -593,10 +577,8 @@ export declare interface PageModule {
 export declare interface PrimaryActionConfig {
   /** Button title */
   title: string;
-  /** Callback function to execute when clicked (replaces url) */
-  onClick?: () => void;
-  /** Custom value for identifying the action (passed to onClick callback) */
-  value?: string;
+  /** Value identifier for the action (passed to onActionClick callback) */
+  value: string;
   /** Optional subtitle */
   subTitle?: string;
   /** Optional icon class name */
@@ -608,22 +590,14 @@ export declare interface PrimaryActionConfig {
 }
 
 /**
- * Reset the singleton (mainly for testing).
+ * Reset the singleton (for testing).
  */
 export declare function resetEmbeddedApp(): void;
 
 /**
- * @fileoverview Core type definitions for the Embedded SDK.
- */
-/**
  * Theme type for the SDK.
  */
 declare type Theme = "light" | "dark";
-
-/**
- * Theme change callback type.
- */
-declare type ThemeChangeCallback = (theme: "light" | "dark") => void;
 
 /**
  * Toast notification options.
@@ -703,10 +677,6 @@ export declare interface UIModule {
    * Toast notifications.
    */
   toast: ToastSubModule;
-  /**
-   * Modal control.
-   */
-  modal: ModalSubModule;
   /**
    * Show a confirmation dialog and wait for user response.
    *
