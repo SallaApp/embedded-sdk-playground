@@ -86,17 +86,6 @@ function AppContent() {
   const [eventPayload, setEventPayload] = useState(null);
   const hasShownConnectedToast = useRef(false);
 
-  const handleTabChange = useCallback(
-    (tabId) => {
-      setActiveTab(tabId);
-      // Auto-resize iframe after view changes
-      setTimeout(() => {
-        embedded.page.resize(document.body.clientHeight);
-      }, 100);
-    },
-    [embedded],
-  );
-
   // Connection status derived from SDK state
   const isConnected = isReady;
 
@@ -194,7 +183,7 @@ function AppContent() {
         parentOrigin={parentOrigin}
         iframeMode={iframeMode}
       />
-      <Tabs activeTab={activeTab} onTabChange={handleTabChange} tabs={tabs} />
+      <Tabs activeTab={activeTab} onTabChange={setActiveTab} tabs={tabs} />
       <main className="main-content">
         {activeTab === "test-console" && (
           <>
