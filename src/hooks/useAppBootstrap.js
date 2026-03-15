@@ -26,6 +26,7 @@ import logger from "../utils/logger.js";
  * STEP 4: Signal Ready
  *   - Call embedded.ready() to remove the host's loading overlay
  *   - Your app is now visible to the user
+ *   - The host automatically handles iframe height (auto-resize)
  *
  * STEP 5: Subscribe to Events
  *   - Use embedded.onThemeChange() for theme updates
@@ -146,19 +147,13 @@ export function useAppBootstrap(options = {}) {
       // ------------------------------------------
       // STEP 4: Signal Ready
       // Removes the dashboard's loading overlay
+      // The host automatically handles iframe height (auto-resize)
       // ------------------------------------------
       logger.log("➡️ Step 4: Signaling ready...");
       embedded.ready();
       setIsReady(true);
       setIsInitializing(false);
       logger.log("✅ Step 4 complete. App is ready!");
-
-      // ------------------------------------------
-      // STEP 5: Start auto-resizing iframe
-      // ------------------------------------------
-      logger.log("➡️ Step 5: Starting auto-resizing iframe...");
-      embedded.page.autoResize();
-      logger.log("✅ Step 5 complete. Auto-resizing iframe started!");
     } catch (err) {
       logger.error("Bootstrap error:", err);
       setError(err.message);
@@ -168,7 +163,7 @@ export function useAppBootstrap(options = {}) {
   }, [debug, isInitializing]);
 
   // ============================================
-  // STEP 5: Subscribe to SDK Events
+  // Subscribe to SDK Events
   // ============================================
 
   // Theme subscription - updates local layout state + calls user callback

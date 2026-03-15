@@ -12,8 +12,8 @@ export default function PayloadEditor({
       JSON.stringify(
         // Default payload editor value
         {
-          event: "embedded::iframe.resize",
-          payload: { height: 800 },
+          event: "embedded::page.navigate",
+          payload: { path: "/products" },
           timestamp: 1773234520517,
           source: "embedded-app",
         },
