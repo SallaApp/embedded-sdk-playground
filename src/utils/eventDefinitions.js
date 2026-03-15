@@ -34,18 +34,6 @@ const EmbeddedEvents = {
     payload: {},
   },
 
-  /**
-   * Request iframe resize
-   */
-  "embedded::iframe.resize": {
-    category: "iframe",
-    description: "Request iframe height change",
-    payload: {
-      height: 800,
-    },
-    configurable: ["height"],
-  },
-
   // ============================================
   // Authentication Events
   // ============================================
