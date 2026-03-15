@@ -53,10 +53,6 @@ export default function EventTriggers({
           showToast("Ready signal sent!", "success");
           break;
 
-        case "embedded::iframe.resize":
-          embedded.page.resize(payload.height);
-          break;
-
         case "embedded::auth.refresh":
           embedded.auth.refresh();
           break;
@@ -212,12 +208,6 @@ export default function EventTriggers({
             label="Ready"
             hint="Signal app ready"
             onClick={() => handleEventButtonClick("embedded::ready")}
-          />
-          <Button
-            event
-            label="Resize"
-            hint="iframe.resize"
-            onClick={() => handleEventButtonClick("embedded::iframe.resize")}
           />
           <Button
             event

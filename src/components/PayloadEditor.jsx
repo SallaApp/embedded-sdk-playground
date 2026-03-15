@@ -9,7 +9,17 @@ export default function PayloadEditor({
 }) {
   const [payload, setPayload] = useState(
     initialPayload ||
-      JSON.stringify({ event: "embedded::iframe.ready", height: 600 }, null, 2),
+      JSON.stringify(
+        // Default payload editor value
+        {
+          event: "embedded::page.navigate",
+          payload: { path: "/products" },
+          timestamp: 1773234520517,
+          source: "embedded-app",
+        },
+        null,
+        2,
+      ),
   );
 
   // Update payload when event is clicked

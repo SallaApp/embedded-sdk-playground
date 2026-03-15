@@ -5,7 +5,7 @@ import EventTriggers from "../EventTriggers.jsx";
 
 const mockEmbedded = {
   ready: vi.fn(),
-  page: { resize: vi.fn() },
+  page: {},
   auth: { refresh: vi.fn(), getToken: vi.fn(), introspect: vi.fn() },
   destroy: vi.fn(),
   ui: {

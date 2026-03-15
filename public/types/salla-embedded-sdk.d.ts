@@ -221,7 +221,7 @@ export declare class EmbeddedApp {
   private postInitHooks;
   /** Auth module for token management */
   auth: AuthModule;
-  /** Page module for navigation and resize */
+  /** Page module for navigation */
   page: PageModule;
   /** Nav module for primary actions */
   nav: NavModule;
@@ -537,28 +537,6 @@ export declare interface PageModule {
    */
   navTo(path: string, options?: NavToOptions): void;
   /**
-   * Update the iframe height.
-   *
-   * @param height - Height in pixels
-   *
-   * @example
-   * ```typescript
-   * embedded.page.resize(800);
-   * ```
-   */
-  resize(height: number): void;
-  /**
-   * Auto-resize iframe to content height.
-   * Measures document.documentElement.scrollHeight and sends resize.
-   *
-   * @example
-   * ```typescript
-   * // After content changes
-   * embedded.page.autoResize();
-   * ```
-   */
-  autoResize(): void;
-  /**
    * Set the page title in the host document.
    *
    * @param title - The title to set
@@ -569,6 +547,12 @@ export declare interface PageModule {
    * ```
    */
   setTitle(title: string): void;
+  /** @deprecated No effect - host manages iframe height automatically. */
+  resize(height: number): void;
+  /** @deprecated No effect - host manages iframe height automatically. */
+  autoResize(): void;
+  /** @deprecated No effect - host manages iframe height automatically. */
+  stopAutoResize(): void;
 }
 
 /**

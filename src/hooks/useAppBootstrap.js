@@ -26,6 +26,7 @@ import logger from "../utils/logger.js";
  * STEP 4: Signal Ready
  *   - Call embedded.ready() to remove the host's loading overlay
  *   - Your app is now visible to the user
+ *   - The host automatically handles iframe height (auto-resize)
  *
  * STEP 5: Subscribe to Events
  *   - Use embedded.onThemeChange() for theme updates
@@ -99,26 +100,29 @@ export function useAppBootstrap(options = {}) {
       // STEP 1: Initialize SDK
       // Establishes postMessage connection with host
       // ------------------------------------------
-      logger.log("Step 1: Initializing SDK...");
+      logger.log("➡️ Step 1: Initializing SDK...");
       const { layout: initialLayout } = await embedded.init({ debug });
       setLayout(initialLayout);
-      logger.log("Step 1 complete. Layout:", initialLayout);
+      logger.log("✅ Step 1 complete. Layout:", initialLayout);
 
       // ------------------------------------------
       // STEP 2: Get Token from URL
       // Token is passed as ?token=XXX query parameter
       // ------------------------------------------
-      logger.log("Step 2: Getting token from URL...");
+      logger.log("➡️ Step 2: Getting token from URL...");
       const tokenValue = embedded.auth.getToken();
       setToken(tokenValue);
-      logger.log("Step 2 complete. Token:", tokenValue ? "Found" : "Not found");
+      logger.log(
+        "✅ Step 2 complete. Token:",
+        tokenValue ? "Found" : "Not found",
+      );
 
       // ------------------------------------------
       // STEP 3: Verify Token (if present)
       // Send to your backend for validation
       // ------------------------------------------
       if (tokenValue) {
-        logger.log("Step 3: Verifying token...");
+        logger.log("➡️ Step 3: Verifying token...");
         setVerifyStatus("verifying");
 
         const result = await verifyToken(tokenValue);
@@ -126,29 +130,30 @@ export function useAppBootstrap(options = {}) {
         if (result.success) {
           setVerifiedData(result.data);
           setVerifyStatus("verified");
-          logger.log("Step 3 complete. Verified:", result.data);
+          logger.log("✅ Step 3 complete. Verified:", result.data);
         } else {
           setVerifyStatus("failed");
           setError("Token verification failed");
-          logger.error("Step 3 failed:", result.error);
+          logger.error("❌ Step 3 failed:", result.error);
           // Don't signal ready on verification failure
           setIsInitializing(false);
           return;
         }
       } else {
-        logger.log("Step 3: Skipped (no token)");
+        logger.log("✅ Step 3: Skipped (no token)");
         setVerifyStatus("idle");
       }
 
       // ------------------------------------------
       // STEP 4: Signal Ready
       // Removes the dashboard's loading overlay
+      // The host automatically handles iframe height (auto-resize)
       // ------------------------------------------
-      logger.log("Step 4: Signaling ready...");
+      logger.log("➡️ Step 4: Signaling ready...");
       embedded.ready();
       setIsReady(true);
       setIsInitializing(false);
-      logger.log("Step 4 complete. App is ready!");
+      logger.log("✅ Step 4 complete. App is ready!");
     } catch (err) {
       logger.error("Bootstrap error:", err);
       setError(err.message);
@@ -158,7 +163,7 @@ export function useAppBootstrap(options = {}) {
   }, [debug, isInitializing]);
 
   // ============================================
-  // STEP 5: Subscribe to SDK Events
+  // Subscribe to SDK Events
   // ============================================
 
   // Theme subscription - updates local layout state + calls user callback

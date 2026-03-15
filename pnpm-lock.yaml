@@ -12,8 +12,8 @@ importers:
         specifier: ^4.7.0
         version: 4.7.0(monaco-editor@0.55.1)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       '@salla.sa/embedded-sdk':
-        specifier: v0.2.3
-        version: 0.2.3
+        specifier: v0.2.4
+        version: 0.2.4
       lucide-react:
         specifier: ^0.562.0
         version: 0.562.0(react@19.2.3)
@@ -1534,8 +1534,8 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@salla.sa/embedded-sdk@0.2.3':
-    resolution: {integrity: sha512-6ZyaFIaJq9jbQ3kjAYiQ3H8DZIB3ILzfhF2J4Vfyc5u+bfO2DOWg8ABAp/aF2UcDC9DzVkl7sMFyI9W9kR1esQ==}
+  '@salla.sa/embedded-sdk@0.2.4':
+    resolution: {integrity: sha512-aZrICAghiOy52zvePFyAKlOme7aK2Me1Bq6jHm7J5aah4c5GUOPKkcGdodzf1m9vXHNINf/Cij5vGSmTU83Nqg==}
     engines: {node: '>=18'}
 
   '@sec-ant/readable-stream@0.4.1':
@@ -7051,7 +7051,7 @@ snapshots:
   '@rollup/rollup-win32-x64-msvc@4.53.5':
     optional: true
 
-  '@salla.sa/embedded-sdk@0.2.3': {}
+  '@salla.sa/embedded-sdk@0.2.4': {}
 
   '@sec-ant/readable-stream@0.4.1': {}
 

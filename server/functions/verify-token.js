@@ -7,7 +7,7 @@
 
 // Environment-based API URLs
 const VERIFY_API_URLS = {
-  dev: "https://exchange-authority-service-dev-59.merchants.workers.dev/exchange-authority/v1/verify",
+  dev: "https://exchange-authority-service-dev-62.merchants.workers.dev/exchange-authority/v1/verify",
   prod: "https://api.salla.dev/exchange-authority/v1/verify",
 };
 

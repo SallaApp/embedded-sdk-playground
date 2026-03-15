@@ -7,7 +7,7 @@ const mockEmbedded = {
   init: vi.fn().mockResolvedValue({ layout: {} }),
   ready: vi.fn(),
   auth: { getToken: vi.fn().mockReturnValue(null) },
-  page: { resize: vi.fn() },
+  page: {},
   nav: { onActionClick: vi.fn().mockReturnValue(() => {}) },
   destroy: vi.fn(),
   onThemeChange: vi.fn().mockReturnValue(() => {}),
