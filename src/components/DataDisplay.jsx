@@ -51,6 +51,10 @@ export default function DataDisplay({
               <span className="data-value">{layoutData?.locale || "—"}</span>
             </div>
             <div className="data-item">
+              <span className="data-label">Direction</span>
+              <span className="data-value">{layoutData?.dir || "—"}</span>
+            </div>
+            <div className="data-item">
               <span className="data-label">Currency</span>
               <span className="data-value">{layoutData?.currency || "—"}</span>
             </div>

@@ -1,7 +1,6 @@
 import { EmbeddedEvents } from "../utils/eventDefinitions.js";
 import { Clock, Lock, Home, Menu, Grid3x3, Bell, Square } from "lucide-react";
 import Button from "./forms/Button.jsx";
-import logger from "../utils/logger.js";
 
 export default function EventTriggers({
   onEventClick,
@@ -9,6 +8,9 @@ export default function EventTriggers({
   logMessage,
   showToast,
   bootstrap,
+  onAddDynamicItem,
+  onUpdateLatestDynamicItem,
+  onRemoveLatestDynamicItem,
 }) {
   const handleEventButtonClick = async (eventName) => {
     const eventDef = EmbeddedEvents[eventName];
@@ -61,15 +63,23 @@ export default function EventTriggers({
           showToast("Calling auth.introspect()...", "info");
           try {
             const result = await embedded.auth.introspect();
-            showToast(
-              `Introspect success! Merchant ID: ${result.data.merchant_id}, User ID: ${result.data.user_id}`,
-              "success",
-            );
+            if (result.isVerified && result.data) {
+              showToast(
+                `Introspect verified. Merchant ID: ${result.data.merchant_id}, User ID: ${result.data.user_id}`,
+                "success",
+              );
+            } else {
+              showToast(
+                `Introspect failed: ${String(result.error || "Unknown error")}`,
+                "error",
+              );
+            }
             logMessage("incoming", {
               event: "embedded::auth.introspect.response",
-              status: result.status,
-              success: result.success,
+              isVerified: result.isVerified,
+              isError: result.isError,
               data: result.data,
+              error: result.error,
             });
           } catch (error) {
             showToast(`Introspect error: ${error.message}`, "error");
@@ -116,34 +126,85 @@ export default function EventTriggers({
           embedded.nav.clearAction();
           break;
 
-        case "embedded::ui.loading-show":
+        case "embedded::nav.addItem": {
+          showToast("Calling nav.addNavItem()…", "info");
+          try {
+            if (!onAddDynamicItem)
+              throw new Error("Add item handler is missing");
+            const result = await onAddDynamicItem();
+            showToast(
+              `Added navbar item. ID: ${result.id || "none"}`,
+              "success",
+            );
+            logMessage("incoming", {
+              event: "embedded::nav.addItem.response",
+              item: result,
+            });
+          } catch (err) {
+            showToast(`addNavItem failed: ${err.message}`, "error");
+            logMessage(
+              "outgoing",
+              { event: eventName, ...payload },
+              err.message,
+            );
+          }
+          break;
+        }
+
+        case "embedded::nav.updateItem": {
+          try {
+            if (!onUpdateLatestDynamicItem) {
+              throw new Error("Update item handler is missing");
+            }
+            const latest = await onUpdateLatestDynamicItem();
+            showToast(`nav.updateNavItem: ${latest.id}`, "success");
+          } catch (err) {
+            showToast(`updateNavItem failed: ${err.message}`, "error");
+          }
+          break;
+        }
+
+        case "embedded::nav.removeItem": {
+          try {
+            if (!onRemoveLatestDynamicItem) {
+              throw new Error("Remove item handler is missing");
+            }
+            const latest = await onRemoveLatestDynamicItem();
+            showToast(`nav.removeNavItem: ${latest.id}`, "success");
+          } catch (err) {
+            showToast(`removeNavItem failed: ${err.message}`, "warning");
+          }
+          break;
+        }
+
+        case "embedded::ui.loading":
           embedded.ui.toast.info(
             "Loading event sent. You should call embedded.ui.loading.hide() to re-show the App. This test App will automatically hide loading after 10 seconds",
           );
-          embedded.ui.loading.show();
-          setTimeout(() => {
+          if (payload.action === "show") {
+            embedded.ui.loading.show();
+            setTimeout(() => {
+              embedded.ui.loading.hide();
+            }, 10000);
+          } else {
             embedded.ui.loading.hide();
-          }, 10000);
+          }
           break;
 
-        case "embedded::ui.loading-hide":
-          embedded.ui.loading.hide();
+        case "embedded::ui.breadcrumbs":
+          if (payload.action === "hide") {
+            embedded.ui.breadcrumbs.hide();
+          } else {
+            embedded.ui.breadcrumbs.show();
+          }
           break;
 
-        case "embedded::ui.toast-success":
-          embedded.ui.toast.success(payload.message, payload.duration);
-          break;
-
-        case "embedded::ui.toast-error":
-          embedded.ui.toast.error(payload.message, payload.duration);
-          break;
-
-        case "embedded::ui.toast-warning":
-          embedded.ui.toast.warning(payload.message, payload.duration);
-          break;
-
-        case "embedded::ui.toast-info":
-          embedded.ui.toast.info(payload.message, payload.duration);
+        case "embedded::ui.toast":
+          embedded.ui.toast.show({
+            type: payload.type,
+            message: payload.message,
+            duration: payload.duration,
+          });
           break;
 
         case "embedded::ui.confirm": {
@@ -290,6 +351,24 @@ export default function EventTriggers({
             hint="nav.clearAction"
             onClick={() => handleEventButtonClick("embedded::nav.clearAction")}
           />
+          <Button
+            event
+            label="Add item"
+            hint="nav.addNavItem (async)"
+            onClick={() => handleEventButtonClick("embedded::nav.addItem")}
+          />
+          <Button
+            event
+            label="Update item"
+            hint="nav.updateNavItem"
+            onClick={() => handleEventButtonClick("embedded::nav.updateItem")}
+          />
+          <Button
+            event
+            label="Remove item"
+            hint="nav.removeNavItem"
+            onClick={() => handleEventButtonClick("embedded::nav.removeItem")}
+          />
         </div>
       </section>
 
@@ -304,13 +383,37 @@ export default function EventTriggers({
             event
             label="Loading On"
             hint="ui.loading (show)"
-            onClick={() => handleEventButtonClick("embedded::ui.loading-show")}
+            onClick={() => {
+              onEventClick?.("embedded::ui.loading", { action: "show" });
+              sendSdkEvent("embedded::ui.loading", { action: "show" });
+            }}
           />
           <Button
             event
             label="Loading Off"
             hint="ui.loading (hide)"
-            onClick={() => handleEventButtonClick("embedded::ui.loading-hide")}
+            onClick={() => {
+              onEventClick?.("embedded::ui.loading", { action: "hide" });
+              sendSdkEvent("embedded::ui.loading", { action: "hide" });
+            }}
+          />
+          <Button
+            event
+            label="Breadcrumbs Show"
+            hint="ui.breadcrumbs (show)"
+            onClick={() => {
+              onEventClick?.("embedded::ui.breadcrumbs", { action: "show" });
+              sendSdkEvent("embedded::ui.breadcrumbs", { action: "show" });
+            }}
+          />
+          <Button
+            event
+            label="Breadcrumbs Hide"
+            hint="ui.breadcrumbs (hide)"
+            onClick={() => {
+              onEventClick?.("embedded::ui.breadcrumbs", { action: "hide" });
+              sendSdkEvent("embedded::ui.breadcrumbs", { action: "hide" });
+            }}
           />
         </div>
       </section>
@@ -327,28 +430,72 @@ export default function EventTriggers({
             variant="success"
             label="Success"
             hint="ui.toast (success)"
-            onClick={() => handleEventButtonClick("embedded::ui.toast-success")}
+            onClick={() => {
+              onEventClick?.("embedded::ui.toast", {
+                type: "success",
+                message: "Operation completed successfully!",
+                duration: 3000,
+              });
+              sendSdkEvent("embedded::ui.toast", {
+                type: "success",
+                message: "Operation completed successfully!",
+                duration: 3000,
+              });
+            }}
           />
           <Button
             event
             variant="danger"
             label="Error"
             hint="ui.toast (error)"
-            onClick={() => handleEventButtonClick("embedded::ui.toast-error")}
+            onClick={() => {
+              onEventClick?.("embedded::ui.toast", {
+                type: "error",
+                message: "Something went wrong!",
+                duration: 5000,
+              });
+              sendSdkEvent("embedded::ui.toast", {
+                type: "error",
+                message: "Something went wrong!",
+                duration: 5000,
+              });
+            }}
           />
           <Button
             event
             variant="warning"
             label="Warning"
             hint="ui.toast (warning)"
-            onClick={() => handleEventButtonClick("embedded::ui.toast-warning")}
+            onClick={() => {
+              onEventClick?.("embedded::ui.toast", {
+                type: "warning",
+                message: "Please review your input",
+                duration: 4000,
+              });
+              sendSdkEvent("embedded::ui.toast", {
+                type: "warning",
+                message: "Please review your input",
+                duration: 4000,
+              });
+            }}
           />
           <Button
             event
             variant="info"
             label="Info"
             hint="ui.toast (info)"
-            onClick={() => handleEventButtonClick("embedded::ui.toast-info")}
+            onClick={() => {
+              onEventClick?.("embedded::ui.toast", {
+                type: "info",
+                message: "New features available",
+                duration: 3000,
+              });
+              sendSdkEvent("embedded::ui.toast", {
+                type: "info",
+                message: "New features available",
+                duration: 3000,
+              });
+            }}
           />
         </div>
       </section>
