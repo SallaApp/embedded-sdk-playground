@@ -40,8 +40,20 @@ export function useNavSync({ embedded, isReady, setActiveTab, activeTab }) {
     return () => {
       unsubscribeRef.current();
       unsubscribeRef.current = () => {};
+      // remove items injected by this hook.
+      const removeIds = [
+        ...Object.values(staticItemIdsByValueRef.current),
+        ...addedItemsRef.current.map((row) => row.id),
+      ];
+      removeIds.forEach((id) => {
+        try {
+          nav?.removeNavItem?.(id);
+        } catch {
+          /* no-op */
+        }
+      });
     };
-  }, []);
+  }, [nav]);
 
   useEffect(() => {
     if (!isReady || !hasNavApi || bootstrapStateRef.current !== "idle") return;
@@ -55,7 +67,7 @@ export function useNavSync({ embedded, isReady, setActiveTab, activeTab }) {
           const created = await nav.addNavItem({
             title: item.title,
             value: item.value,
-            url: "#",
+            url: "/apps/installed",
             active: item.active,
           });
           createdItems.push(created);
@@ -73,6 +85,7 @@ export function useNavSync({ embedded, isReady, setActiveTab, activeTab }) {
           setActiveTab(value);
         });
         bootstrapStateRef.current = "done";
+        // One-shot: align with whichever tab the parent currently points at.
         activateStaticTab(activeTab);
       } catch (error) {
         bootstrapStateRef.current = "idle";
@@ -83,14 +96,20 @@ export function useNavSync({ embedded, isReady, setActiveTab, activeTab }) {
     return () => {
       disposed = true;
     };
-  }, [activeTab, activateStaticTab, hasNavApi, isReady, nav, setActiveTab]);
+    // `activeTab` intentionally excluded — this effect bootstraps once; the
+    // syncActiveTab effect handles subsequent tab changes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activateStaticTab, hasNavApi, isReady, nav, setActiveTab]);
 
-  const syncActiveTab = (tab) => {
-    if (!tab || !STATIC_TAB_VALUE_SET.has(tab)) return;
-    activateStaticTab(tab);
-  };
+  const syncActiveTab = useCallback(
+    (tab) => {
+      if (!tab || !STATIC_TAB_VALUE_SET.has(tab)) return;
+      activateStaticTab(tab);
+    },
+    [activateStaticTab],
+  );
 
-  const addDynamicItem = async () => {
+  const addDynamicItem = useCallback(async () => {
     if (!nav?.addNavItem) {
       throw new Error("nav.addNavItem is not available");
     }
@@ -98,16 +117,16 @@ export function useNavSync({ embedded, isReady, setActiveTab, activeTab }) {
     const result = await nav.addNavItem({
       title: `Added Item ${index}`,
       value: `added-item-${index}`,
-      url: "#",
+      url: "/apps/installed",
     });
     const nextItems = [...addedItemsRef.current, { id: result.id, n: index }];
     addedItemsRef.current = nextItems;
     setAddedItems(nextItems);
     nextDynamicIndexRef.current = index + 1;
     return { ...result, n: index };
-  };
+  }, [nav]);
 
-  const updateLatestDynamicItem = async () => {
+  const updateLatestDynamicItem = useCallback(async () => {
     if (!nav?.updateNavItem) {
       throw new Error("nav.updateNavItem is not available");
     }
@@ -120,9 +139,9 @@ export function useNavSync({ embedded, isReady, setActiveTab, activeTab }) {
       title: `Updated Item ${latest.n}`,
     });
     return latest;
-  };
+  }, [nav]);
 
-  const removeLatestDynamicItem = async () => {
+  const removeLatestDynamicItem = useCallback(async () => {
     if (!nav?.removeNavItem) {
       throw new Error("nav.removeNavItem is not available");
     }
@@ -135,7 +154,7 @@ export function useNavSync({ embedded, isReady, setActiveTab, activeTab }) {
     addedItemsRef.current = nextItems;
     setAddedItems(nextItems);
     return latest;
-  };
+  }, [nav]);
 
   return {
     addDynamicItem,

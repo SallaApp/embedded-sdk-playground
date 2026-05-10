@@ -12,6 +12,13 @@ export default function EventTriggers({
   onUpdateLatestDynamicItem,
   onRemoveLatestDynamicItem,
 }) {
+  // Build a payload once and dispatch through the same path as
+  // handleEventButtonClick. Used by buttons whose payload is fixed inline.
+  const fire = (eventName, payload) => {
+    if (onEventClick) onEventClick(eventName, payload);
+    return sendSdkEvent(eventName, payload);
+  };
+
   const handleEventButtonClick = async (eventName) => {
     const eventDef = EmbeddedEvents[eventName];
 
@@ -383,37 +390,25 @@ export default function EventTriggers({
             event
             label="Loading On"
             hint="ui.loading (show)"
-            onClick={() => {
-              onEventClick?.("embedded::ui.loading", { action: "show" });
-              sendSdkEvent("embedded::ui.loading", { action: "show" });
-            }}
+            onClick={() => fire("embedded::ui.loading", { action: "show" })}
           />
           <Button
             event
             label="Loading Off"
             hint="ui.loading (hide)"
-            onClick={() => {
-              onEventClick?.("embedded::ui.loading", { action: "hide" });
-              sendSdkEvent("embedded::ui.loading", { action: "hide" });
-            }}
+            onClick={() => fire("embedded::ui.loading", { action: "hide" })}
           />
           <Button
             event
             label="Breadcrumbs Show"
             hint="ui.breadcrumbs (show)"
-            onClick={() => {
-              onEventClick?.("embedded::ui.breadcrumbs", { action: "show" });
-              sendSdkEvent("embedded::ui.breadcrumbs", { action: "show" });
-            }}
+            onClick={() => fire("embedded::ui.breadcrumbs", { action: "show" })}
           />
           <Button
             event
             label="Breadcrumbs Hide"
             hint="ui.breadcrumbs (hide)"
-            onClick={() => {
-              onEventClick?.("embedded::ui.breadcrumbs", { action: "hide" });
-              sendSdkEvent("embedded::ui.breadcrumbs", { action: "hide" });
-            }}
+            onClick={() => fire("embedded::ui.breadcrumbs", { action: "hide" })}
           />
         </div>
       </section>
@@ -430,72 +425,52 @@ export default function EventTriggers({
             variant="success"
             label="Success"
             hint="ui.toast (success)"
-            onClick={() => {
-              onEventClick?.("embedded::ui.toast", {
+            onClick={() =>
+              fire("embedded::ui.toast", {
                 type: "success",
                 message: "Operation completed successfully!",
                 duration: 3000,
-              });
-              sendSdkEvent("embedded::ui.toast", {
-                type: "success",
-                message: "Operation completed successfully!",
-                duration: 3000,
-              });
-            }}
+              })
+            }
           />
           <Button
             event
             variant="danger"
             label="Error"
             hint="ui.toast (error)"
-            onClick={() => {
-              onEventClick?.("embedded::ui.toast", {
+            onClick={() =>
+              fire("embedded::ui.toast", {
                 type: "error",
                 message: "Something went wrong!",
                 duration: 5000,
-              });
-              sendSdkEvent("embedded::ui.toast", {
-                type: "error",
-                message: "Something went wrong!",
-                duration: 5000,
-              });
-            }}
+              })
+            }
           />
           <Button
             event
             variant="warning"
             label="Warning"
             hint="ui.toast (warning)"
-            onClick={() => {
-              onEventClick?.("embedded::ui.toast", {
+            onClick={() =>
+              fire("embedded::ui.toast", {
                 type: "warning",
                 message: "Please review your input",
                 duration: 4000,
-              });
-              sendSdkEvent("embedded::ui.toast", {
-                type: "warning",
-                message: "Please review your input",
-                duration: 4000,
-              });
-            }}
+              })
+            }
           />
           <Button
             event
             variant="info"
             label="Info"
             hint="ui.toast (info)"
-            onClick={() => {
-              onEventClick?.("embedded::ui.toast", {
+            onClick={() =>
+              fire("embedded::ui.toast", {
                 type: "info",
                 message: "New features available",
                 duration: 3000,
-              });
-              sendSdkEvent("embedded::ui.toast", {
-                type: "info",
-                message: "New features available",
-                duration: 3000,
-              });
-            }}
+              })
+            }
           />
         </div>
       </section>
