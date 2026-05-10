@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo, useRef } from "react";
 /* global console */
 
 /**
@@ -38,16 +38,18 @@ function stripConsoleStyles(...args) {
 export function useCodeExecution() {
   const [output, setOutput] = useState([]);
   const [isExecuting, setIsExecuting] = useState(false);
+  const runIdRef = useRef(0);
   // Console is patched once per page lifetime and never restored — original
   // methods remain reachable via `interceptor.original.*`. The previous
   // implementation re-patched on every executeCode call and restored after a
   // 2-second setTimeout, which raced with async code under test.
-  const interceptor = globalThis.__playgroundConsoleInterceptor ?? {
-    installed: false,
-    sink: null,
-    original: null,
-  };
-  globalThis.__playgroundConsoleInterceptor = interceptor;
+  const interceptor = useMemo(() => {
+    const existing = globalThis.__playgroundConsoleInterceptor;
+    if (existing) return existing;
+    const created = { installed: false, sink: null, original: null };
+    globalThis.__playgroundConsoleInterceptor = created;
+    return created;
+  }, []);
 
   const ensureConsolePatched = useCallback(() => {
     if (interceptor.installed) return;
@@ -79,14 +81,17 @@ export function useCodeExecution() {
   const executeCode = useCallback(
     (code) => {
       ensureConsolePatched();
+      const runId = ++runIdRef.current;
       setIsExecuting(true);
       setOutput([]);
 
       const logs = [];
       interceptor.sink = (entry) => {
         logs.push(entry);
-        setOutput([...logs]);
+        if (runIdRef.current === runId) setOutput([...logs]);
       };
+
+      const isCurrent = () => runIdRef.current === runId;
 
       const processResult = (result) => {
         // Add result to output if present
@@ -100,10 +105,11 @@ export function useCodeExecution() {
           });
         }
 
-        // Final output update
-        setOutput([...logs]);
-        setIsExecuting(false);
-        interceptor.sink = null;
+        if (isCurrent()) {
+          setOutput([...logs]);
+          setIsExecuting(false);
+          interceptor.sink = null;
+        }
 
         return { result, logs, error: null };
       };
@@ -112,10 +118,11 @@ export function useCodeExecution() {
         // Add error to logs
         logs.push({ type: "error", args: error.message });
 
-        // Final output update
-        setOutput([...logs]);
-        setIsExecuting(false);
-        interceptor.sink = null;
+        if (isCurrent()) {
+          setOutput([...logs]);
+          setIsExecuting(false);
+          interceptor.sink = null;
+        }
 
         return { result: null, logs, error: error.message };
       };
