@@ -5,6 +5,7 @@ import { useExposeEmbeddedGlobally } from "./hooks/useExposeEmbeddedGlobally.js"
 import { useCheckoutResultSubscription } from "./hooks/useCheckoutResultSubscription.js";
 import { useIframeAutoBootstrap } from "./hooks/useIframeAutoBootstrap.js";
 import { useMessageLog } from "./hooks/useMessageLog.js";
+import { useNavSync } from "./hooks/useNavSync.js";
 import { ToastProvider, useToast } from "./contexts/ToastContext.jsx";
 import { ThemeProvider } from "./contexts/ThemeContext.jsx";
 import Header from "./components/Header.jsx";
@@ -85,6 +86,22 @@ function AppContent() {
   const [activeTab, setActiveTab] = useState("test-console");
   const [eventPayload, setEventPayload] = useState(null);
   const hasShownConnectedToast = useRef(false);
+
+  const {
+    addDynamicItem,
+    updateLatestDynamicItem,
+    removeLatestDynamicItem,
+    syncActiveTab,
+  } = useNavSync({
+    embedded,
+    isReady,
+    setActiveTab,
+    activeTab,
+  });
+
+  useEffect(() => {
+    syncActiveTab(activeTab);
+  }, [activeTab, syncActiveTab]);
 
   // Connection status derived from SDK state
   const isConnected = isReady;
@@ -193,6 +210,9 @@ function AppContent() {
               showToast={showToast}
               bootstrap={bootstrap}
               onEventClick={handleEventClick}
+              onAddDynamicItem={addDynamicItem}
+              onUpdateLatestDynamicItem={updateLatestDynamicItem}
+              onRemoveLatestDynamicItem={removeLatestDynamicItem}
             />
             <div className="panel-right">
               <MessageLog
