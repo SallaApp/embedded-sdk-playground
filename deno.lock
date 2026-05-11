@@ -12,7 +12,6 @@
     "packageJson": {
       "dependencies": [
         "npm:@monaco-editor/react@^4.7.0",
-        "npm:@salla.sa/embedded-sdk@0.2.3",
         "npm:@testing-library/jest-dom@^6.6.3",
         "npm:@testing-library/react@^16.1.0",
         "npm:@testing-library/user-event@^14.5.2",

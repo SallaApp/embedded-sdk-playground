@@ -167,7 +167,7 @@ const EmbeddedEvents = {
       item: {
         title: "Added Item 1",
         value: "added-item-1",
-        url: "#",
+        url: "/apps/installed",
         disabled: false,
         active: false,
       },
