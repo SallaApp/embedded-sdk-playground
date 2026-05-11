@@ -54,6 +54,9 @@ export function useNavSync({ embedded, isReady, setActiveTab, activeTab }) {
       });
       staticItemIdsByValueRef.current = {};
       bootstrapStateRef.current = "idle";
+      addedItemsRef.current = [];
+      setAddedItems([]);
+      nextDynamicIndexRef.current = 1;
     };
   }, [nav]);
 
