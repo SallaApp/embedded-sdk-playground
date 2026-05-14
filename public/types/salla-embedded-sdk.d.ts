@@ -432,6 +432,17 @@ declare interface NavItemAddResult {
     id: string;
 }
 
+/**
+ * One submenu row; must not include nested `children`.
+ */
+export declare interface NavItemChildInput {
+    title: string;
+    value: string;
+    url: string;
+    disabled?: boolean;
+    active?: boolean;
+}
+
 /** Callback when injected nav item is clicked */
 declare type NavItemClickCallback = (payload: {
     value: string;
@@ -457,7 +468,7 @@ export declare interface NavItemNodeInput {
     disabled?: boolean;
     active?: boolean;
     /** One level of submenu items only; must not contain further `children`. */
-    children?: NavItemNodeInput[];
+    children?: NavItemChildInput[];
 }
 
 /**
@@ -472,7 +483,7 @@ declare interface NavItemPatchInput {
     disabled?: boolean;
     active?: boolean;
     /** Parent only: replaces entire children list when set. */
-    children?: NavItemNodeInput[];
+    children?: NavItemChildInput[];
 }
 
 /**

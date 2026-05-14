@@ -111,7 +111,10 @@ export function useNavSync({ embedded, isReady, setActiveTab, activeTab }) {
       value: `added-item-${index}`,
       url: "/apps/installed",
     });
-    const nextItems = [...addedItemsRef.current, { value: result.value, n: index }];
+    const nextItems = [
+      ...addedItemsRef.current,
+      { value: result.value, n: index },
+    ];
     addedItemsRef.current = nextItems;
     setAddedItems(nextItems);
     nextDynamicIndexRef.current = index + 1;

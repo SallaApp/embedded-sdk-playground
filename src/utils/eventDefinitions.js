@@ -312,7 +312,8 @@ const IncomingEvents = {
   },
 
   "embedded::nav.addItem.response": {
-    description: "Ack for nav.addNavItem with `item.value` and deprecated `item.id` (same string)",
+    description:
+      "Ack for nav.addNavItem with `item.value` and deprecated `item.id` (same string)",
     expectedFields: ["item"],
   },
 
