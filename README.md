@@ -1,4 +1,4 @@
-# Embedded SDK Playground v0.2.5
+# Embedded SDK Playground v0.2.6
 
 A developer testing tool for the Salla Embedded SDK.
 
