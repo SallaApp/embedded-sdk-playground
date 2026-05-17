@@ -156,12 +156,13 @@ const EmbeddedEvents = {
   },
 
   /**
-   * Add one host navbar item (opaque id returned via addItem.response)
+   * Add one host sub-nav item (`value` is the stable key; response echoes deprecated `id` === `value`).
+   * Optional one-level `item.children` for a dropdown.
    */
   "embedded::nav.addItem": {
     category: "nav",
     description:
-      "Add a dynamic item (Added Item {n}) to merchant dashboard navbar",
+      "Add a dynamic sub-nav item (Added Item {n}); optional children[] for one submenu level",
     async: true,
     payload: {
       item: {
@@ -176,14 +177,14 @@ const EmbeddedEvents = {
   },
 
   /**
-   * Update injected item (requires id from addNavItem response)
+   * Update injected parent or child by `value` (immutable key)
    */
   "embedded::nav.updateItem": {
     category: "nav",
     description: "Rename most recently added item to Updated Item {n}",
     payload: {
       item: {
-        id: "REPLACE_WITH_ID_FROM_RESPONSE",
+        value: "REPLACE_WITH_VALUE_FROM_RESPONSE",
         title: "Updated Item 1",
       },
     },
@@ -191,15 +192,15 @@ const EmbeddedEvents = {
   },
 
   /**
-   * Remove injected items by opaque id (host ignores unknown ids)
+   * Remove injected items by `value` (host ignores unknown values)
    */
   "embedded::nav.removeItem": {
     category: "nav",
     description: "Remove most recently added dynamic item (LIFO)",
     payload: {
-      id: "",
+      value: "",
     },
-    configurable: ["id"],
+    configurable: ["value"],
     warning:
       "Runtime behavior always removes the most recently added item tracked by the app.",
   },
@@ -307,11 +308,12 @@ const IncomingEvents = {
 
   "embedded::nav.itemClick": {
     description: "Clicked an injected dashboard navbar item",
-    expectedFields: ["id", "value", "url"],
+    expectedFields: ["value", "url", "id"],
   },
 
   "embedded::nav.addItem.response": {
-    description: "Ack for nav.addNavItem with generated opaque id",
+    description:
+      "Ack for nav.addNavItem with `item.value` and deprecated `item.id` (same string)",
     expectedFields: ["item"],
   },
 

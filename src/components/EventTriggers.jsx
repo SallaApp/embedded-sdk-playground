@@ -164,7 +164,7 @@ export default function EventTriggers({
               throw new Error("Update item handler is missing");
             }
             const latest = await onUpdateLatestDynamicItem();
-            showToast(`nav.updateNavItem: ${latest.id}`, "success");
+            showToast(`nav.updateNavItem: ${latest.value}`, "success");
           } catch (err) {
             showToast(`updateNavItem failed: ${err.message}`, "error");
           }
@@ -177,7 +177,7 @@ export default function EventTriggers({
               throw new Error("Remove item handler is missing");
             }
             const latest = await onRemoveLatestDynamicItem();
-            showToast(`nav.removeNavItem: ${latest.id}`, "success");
+            showToast(`nav.removeNavItem: ${latest.value}`, "success");
           } catch (err) {
             showToast(`removeNavItem failed: ${err.message}`, "warning");
           }

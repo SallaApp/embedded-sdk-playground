@@ -428,19 +428,17 @@ declare interface LoadingSubModule {
 
 /** Result of addItem promise */
 declare interface NavItemAddResult {
-  id: string;
   value: string;
+  /**
+   * @deprecated Same string as `value`. Prefer `value` for update/remove/click handling.
+   */
+  id: string;
 }
 
-/** Callback when injected nav item is clicked */
-declare type NavItemClickCallback = (payload: {
-  id: string;
-  value: string;
-  url: string;
-}) => void;
-
-/** Input for injecting one host sub-navigation item */
-declare interface NavItemInput {
+/**
+ * One submenu row; must not include nested `children`.
+ */
+export declare interface NavItemChildInput {
   title: string;
   value: string;
   url: string;
@@ -448,14 +446,47 @@ declare interface NavItemInput {
   active?: boolean;
 }
 
-/** Patch for an injected item (identified by opaque id from addItem response) */
-declare interface NavItemPatchInput {
+/** Callback when injected nav item is clicked */
+declare type NavItemClickCallback = (payload: {
+  value: string;
+  url: string;
+  /**
+   * @deprecated Same string as `value`.
+   */
   id: string;
+}) => void;
+
+/** @alias NavItemNodeInput — root add payload */
+export declare type NavItemInput = NavItemNodeInput;
+
+/**
+ * Sub-navigation node injected into the host sub-nav.
+ * Optional `children` renders as a single hover/click dropdown level (host UI).
+ * Nested children under a child are not supported.
+ */
+export declare interface NavItemNodeInput {
+  title: string;
+  value: string;
+  url: string;
+  disabled?: boolean;
+  active?: boolean;
+  /** One level of submenu items only; must not contain further `children`. */
+  children?: NavItemChildInput[];
+}
+
+/**
+ * Patch for an injected parent or child row.
+ * Identified by `value` (immutable). Optional `children` replaces the full
+ * dropdown list when patching a parent; ignored for child rows.
+ */
+declare interface NavItemPatchInput {
+  value: string;
   title?: string;
-  value?: string;
   url?: string;
   disabled?: boolean;
   active?: boolean;
+  /** Parent only: replaces entire children list when set. */
+  children?: NavItemChildInput[];
 }
 
 /**
@@ -516,9 +547,9 @@ export declare interface NavModule {
    */
   onActionClick(callback: ActionClickCallback): Unsubscribe;
   /**
-   * Inject one sub-navigation item beside API-driven items. Resolves with an
-   * opaque `id` you must keep if you intend to update or remove the item later.
-   * Rejects after 2s if the host does not acknowledge.
+   * Inject one sub-navigation item beside API-driven items. Resolves with the
+   * item's `value` (and deprecated `id` equal to `value`). Rejects after 2s if
+   * the host does not acknowledge.
    *
    * @example
    * ```typescript
@@ -527,36 +558,37 @@ export declare interface NavModule {
    *   value: 'reports',
    *   url: '/apps/installed/my-app/reports',
    * });
-   * console.log(tab.id);   // opaque id, store it
+   * console.log(tab.value);   // use for update/remove
    * ```
    */
   addNavItem(item: NavItemInput): Promise<NavItemAddResult>;
   /**
-   * Patch a previously injected item — disable, rename, mark active, etc.
-   * Unknown ids are silently ignored by the host.
+   * Patch a previously injected parent or child by `value` (unknown values are
+   * ignored by the host). Optional `children` on a parent replaces the full list.
    *
    * @example
    * ```typescript
-   * embedded.nav.updateNavItem({ id: tab.id, disabled: true });
-   * embedded.nav.updateNavItem({ id: tab.id, title: 'Updated title' });
+   * embedded.nav.updateNavItem({ value: 'reports', disabled: true });
+   * embedded.nav.updateNavItem({ value: 'reports', title: 'Updated title' });
    * ```
    */
   updateNavItem(item: NavItemPatchInput): void;
   /**
-   * Remove an injected item by its opaque id (unknown ids are ignored).
+   * Remove an injected parent or child by its `value` (unknown values are ignored).
+   * Removing a parent removes its children.
    *
    * @example
    * ```typescript
-   * embedded.nav.removeNavItem(tab.id);
+   * embedded.nav.removeNavItem('reports');
    * ```
    */
-  removeNavItem(id: string): void;
+  removeNavItem(value: string): void;
   /**
    * Subscribe to clicks on injected sub-nav items from the merchant dashboard chrome.
    *
    * @example
    * ```typescript
-   * const unsubscribe = embedded.nav.onNavItemClick(({ id, value, url }) => {
+   * const unsubscribe = embedded.nav.onNavItemClick(({ value, url }) => {
    *   console.log('clicked tab', value, '->', url);
    * });
    * ```

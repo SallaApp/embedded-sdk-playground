@@ -13,7 +13,6 @@ const STATIC_TAB_VALUE_SET = new Set(
 export function useNavSync({ embedded, isReady, setActiveTab, activeTab }) {
   const [addedItems, setAddedItems] = useState([]);
   const addedItemsRef = useRef([]);
-  const staticItemIdsByValueRef = useRef({});
   const bootstrapStateRef = useRef("idle"); // idle | running | done
   const unsubscribeRef = useRef(() => {});
   const nextDynamicIndexRef = useRef(1);
@@ -29,9 +28,8 @@ export function useNavSync({ embedded, isReady, setActiveTab, activeTab }) {
   const activateStaticTab = useCallback(
     (value) => {
       if (!STATIC_TAB_VALUE_SET.has(value)) return;
-      const id = staticItemIdsByValueRef.current[value];
-      if (!id || !nav?.updateNavItem) return;
-      nav.updateNavItem({ id, active: true });
+      if (!nav?.updateNavItem) return;
+      nav.updateNavItem({ value, active: true });
     },
     [nav],
   );
@@ -40,19 +38,17 @@ export function useNavSync({ embedded, isReady, setActiveTab, activeTab }) {
     return () => {
       unsubscribeRef.current();
       unsubscribeRef.current = () => {};
-      // remove items injected by this hook.
-      const removeIds = [
-        ...Object.values(staticItemIdsByValueRef.current),
-        ...addedItemsRef.current.map((row) => row.id),
+      const removeValues = [
+        ...STATIC_TAB_ITEMS.map((item) => item.value),
+        ...addedItemsRef.current.map((row) => row.value),
       ];
-      removeIds.forEach((id) => {
+      removeValues.forEach((value) => {
         try {
-          nav?.removeNavItem?.(id);
+          nav?.removeNavItem?.(value);
         } catch {
           /* no-op */
         }
       });
-      staticItemIdsByValueRef.current = {};
       bootstrapStateRef.current = "idle";
       addedItemsRef.current = [];
       setAddedItems([]);
@@ -67,30 +63,23 @@ export function useNavSync({ embedded, isReady, setActiveTab, activeTab }) {
 
     (async () => {
       try {
-        const createdItems = [];
         for (const item of STATIC_TAB_ITEMS) {
-          const created = await nav.addNavItem({
+          await nav.addNavItem({
             title: item.title,
             value: item.value,
             url: "/apps/installed",
             active: item.active,
           });
-          createdItems.push(created);
         }
         if (disposed) return;
-        staticItemIdsByValueRef.current = createdItems.reduce((acc, row) => {
-          acc[row.value] = row.id;
-          return acc;
-        }, {});
         unsubscribeRef.current();
-        unsubscribeRef.current = nav.onNavItemClick(({ id, value, url }) => {
+        unsubscribeRef.current = nav.onNavItemClick(({ value, url }) => {
           if (!STATIC_TAB_VALUE_SET.has(value)) return;
-          logger.debug("navbar click payload", { id, value, url });
-          nav.updateNavItem({ id, active: true });
+          logger.debug("navbar click payload", { value, url });
+          nav.updateNavItem({ value, active: true });
           setActiveTab(value);
         });
         bootstrapStateRef.current = "done";
-        // One-shot: align with whichever tab the parent currently points at.
         activateStaticTab(activeTab);
       } catch (error) {
         bootstrapStateRef.current = "idle";
@@ -101,8 +90,6 @@ export function useNavSync({ embedded, isReady, setActiveTab, activeTab }) {
     return () => {
       disposed = true;
     };
-    // `activeTab` intentionally excluded — this effect bootstraps once; the
-    // syncActiveTab effect handles subsequent tab changes.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activateStaticTab, hasNavApi, isReady, nav, setActiveTab]);
 
@@ -124,7 +111,10 @@ export function useNavSync({ embedded, isReady, setActiveTab, activeTab }) {
       value: `added-item-${index}`,
       url: "/apps/installed",
     });
-    const nextItems = [...addedItemsRef.current, { id: result.id, n: index }];
+    const nextItems = [
+      ...addedItemsRef.current,
+      { value: result.value, n: index },
+    ];
     addedItemsRef.current = nextItems;
     setAddedItems(nextItems);
     nextDynamicIndexRef.current = index + 1;
@@ -140,7 +130,7 @@ export function useNavSync({ embedded, isReady, setActiveTab, activeTab }) {
       throw new Error("Nothing to update (add items first)");
     }
     nav.updateNavItem({
-      id: latest.id,
+      value: latest.value,
       title: `Updated Item ${latest.n}`,
     });
     return latest;
@@ -154,7 +144,7 @@ export function useNavSync({ embedded, isReady, setActiveTab, activeTab }) {
     if (!latest) {
       throw new Error("Nothing to remove (add items first)");
     }
-    nav.removeNavItem(latest.id);
+    nav.removeNavItem(latest.value);
     const nextItems = addedItemsRef.current.slice(0, -1);
     addedItemsRef.current = nextItems;
     setAddedItems(nextItems);
