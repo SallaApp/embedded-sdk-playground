@@ -38,7 +38,7 @@
     "netlify-cli": "^23.13.0",
     "prettier": "^3.7.4",
     "vite": "5.4.17",
-    "vitest": "^2.1.8"
+    "vitest": "^3.2.6"
   },
   "dependencies": {
     "@monaco-editor/react": "^4.7.0",
