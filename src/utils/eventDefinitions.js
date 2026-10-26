@@ -330,6 +330,7 @@ const IncomingEvents = {
       "order_id",
       "error",
       "context",
+      "checkout_id",
       "message",
     ],
   },

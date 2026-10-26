@@ -17,6 +17,7 @@ import DataDisplay from "./components/DataDisplay.jsx";
 import PayloadEditor from "./components/PayloadEditor.jsx";
 import PlaygroundTab from "./components/Playground/PlaygroundTab.jsx";
 import AddonsTab from "./components/Addons/AddonsTab.jsx";
+import CheckoutTab from "./components/Checkout/CheckoutTab.jsx";
 
 function AppContent() {
   const { setTheme } = useTheme();
@@ -190,6 +191,7 @@ function AppContent() {
     { id: "test-console", label: "Test Console" },
     { id: "playground", label: "Playground" },
     { id: "addons", label: "Addons" },
+    { id: "checkout", label: "Checkout" },
   ];
 
   return (
@@ -252,6 +254,13 @@ function AppContent() {
         )}
         {activeTab === "addons" && (
           <AddonsTab
+            embedded={embedded}
+            logMessage={logMessage}
+            showToast={showToast}
+          />
+        )}
+        {activeTab === "checkout" && (
+          <CheckoutTab
             embedded={embedded}
             logMessage={logMessage}
             showToast={showToast}
