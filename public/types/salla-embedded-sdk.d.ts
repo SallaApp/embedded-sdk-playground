@@ -67,6 +67,14 @@ declare interface BreadcrumbsSubModule {
 }
 
 /**
+ * Open a checkout that was created server-side (via the public API).
+ */
+export declare interface CheckoutByIdInput {
+    /** Server-created checkout ID (max 64 chars, `A-Za-z0-9_-`) */
+    checkout_id: string;
+}
+
+/**
  * Optional configuration for checkout creation.
  */
 export declare interface CheckoutCreateConfig {
@@ -74,6 +82,13 @@ export declare interface CheckoutCreateConfig {
      * Stored on the host side and returned in onResult after redirect. */
     context?: unknown;
 }
+
+/**
+ * Error thrown by checkout.create() when the input is malformed.
+ */
+export declare type CheckoutInputError = Error & {
+    code: "INVALID_CHECKOUT_INPUT";
+};
 
 /**
  * @fileoverview Type definitions for the checkout module.
@@ -99,7 +114,10 @@ export declare interface CheckoutModule {
      *
      * Accepts a single item or an array of items for multi-item checkout.
      *
-     * @param input - Single checkout item or array of items
+     * Also accepts `{ checkout_id }` to open a checkout created server-side.
+     * Results arrive through `onResult` (with `checkout_id` echoed).
+     *
+     * @param input - Single checkout item, array of items, or `{ checkout_id }`
      * @param config - Optional configuration
      *
      * @example
@@ -115,9 +133,15 @@ export declare interface CheckoutModule {
      *   { type: "addon", slug: "premium-analytics", quantity: 2 },
      *   { type: "addon", slug: "extra-storage" },
      * ]);
+     *
+     * // Server-created checkout
+     * embedded.checkout.create(
+     *   { checkout_id: "1078799918" },
+     *   { context: { route: "/billing" } },
+     * );
      * ```
      */
-    create(input: CheckoutItem | CheckoutItem[], config?: CheckoutCreateConfig): void;
+    create(input: CheckoutItem | CheckoutItem[] | CheckoutByIdInput, config?: CheckoutCreateConfig): void;
     /**
      * Subscribe to checkout results.
      * Context from create() is returned here after 3DS redirect.
@@ -177,13 +201,15 @@ export declare interface CheckoutResult {
     order_id?: string;
     /** Payment status */
     status: "paid" | "pending" | "failed" | "cancelled" | "success";
-    /** Error details if failed */
+    /** Error details if failed. Known codes include `CHECKOUT_NOT_FOUND`. */
     error?: {
-        code: string;
+        code: "CHECKOUT_NOT_FOUND" | (string & {});
         message: string;
     };
     /** Developer context passed to create(), restored after 3DS redirect */
     context?: unknown;
+    /** Checkout ID echoed by the host (when opened by `checkout_id`) */
+    checkout_id?: string;
 }
 
 /**
@@ -380,6 +406,9 @@ declare interface IntrospectResponseData {
     /** Expiration time in ISO 8601 format */
     exp: string;
 }
+
+/** Error code thrown for malformed create() input */
+export declare const INVALID_CHECKOUT_INPUT = "INVALID_CHECKOUT_INPUT";
 
 /**
  * Layout information from the host.
