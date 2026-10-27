@@ -5,6 +5,7 @@ const STATIC_TAB_ITEMS = [
   { title: "Test Console", value: "test-console", active: true },
   { title: "Playground", value: "playground", active: false },
   { title: "Addons", value: "addons", active: false },
+  { title: "Checkout", value: "checkout", active: false },
 ];
 const STATIC_TAB_VALUE_SET = new Set(
   STATIC_TAB_ITEMS.map((item) => item.value),
