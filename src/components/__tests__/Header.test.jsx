@@ -12,7 +12,7 @@ describe("Header", () => {
       </ThemeProvider>,
     );
     expect(screen.getByText("Embedded SDK Playground")).toBeInTheDocument();
-    expect(screen.getByText(/v0\.2\.6/)).toBeInTheDocument();
+    expect(screen.getByText(/v0\.2\.7/)).toBeInTheDocument();
   });
 
   it("renders theme toggle button", () => {
